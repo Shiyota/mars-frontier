@@ -356,6 +356,11 @@ body { background-attachment: fixed; }
 <script>
 var _sdkReady = false;
 var _gameBooted = false;
+let ysdkInstance = null;
+let gamePaused = false;
+let audioCtx = null;
+let soundEnabled = true;
+let gameLang = 'ru';
 function _bootIfNeeded() {
     if (_gameBooted) return;
     _gameBooted = true;
@@ -373,7 +378,6 @@ const CONFIG = {
 };
 
 // ─── I18N ───
-let gameLang = 'ru';
 const I18N = {
     ru: {
         epoch: 'ЭПОХА', buildings: 'Здания', quests: 'Задания', stats: 'Статистика', game_tab: 'Игра',
@@ -994,10 +998,6 @@ function gameLoop() {
 }
 
 // ─── YANDEX SDK / SOUND / ADS ───
-let ysdkInstance = null;
-let gamePaused = false;
-let audioCtx = null;
-let soundEnabled = true;
 
 function initAudio() { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { audioCtx = null; } }
 
