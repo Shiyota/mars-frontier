@@ -366,8 +366,6 @@ function _bootIfNeeded() {
     _gameBooted = true;
     bootGame();
 }
-try { initYandexSDK(); } catch(e) { _bootIfNeeded(); }
-setTimeout(_bootIfNeeded, 3000);
 // ═══════════════════════════════════════════════════════════════════════════════
 // MARS FRONTIER v2.0 — ПЕРЕРАБОТАННЫЙ ДВИЖОК
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -593,7 +591,7 @@ const QUESTS = [
 ];
 
 // ─── STATE ───
-let state = {
+var state = {
     energy: 0, totalEnergy: 0, totalClicks: 0,
     buildings: {}, epoch: 1, prestigeCount: 0, tokens: 0,
     questBonus: 0, claimedQuests: [],
@@ -696,7 +694,7 @@ function resetGame() {
     Object.keys(BUILDINGS).forEach(id => state.buildings[id] = 0);
 }
 
-let pendingOffline = 0;
+var pendingOffline = 0;
 function processOffline() {
     const now = Date.now();
     const offlineSec = Math.min((now - state.lastSave) / 1000, CONFIG.offlineMaxHours * 3600);
@@ -1136,6 +1134,9 @@ function bootGame() {
         document.body.innerHTML = '<div style="padding:20px;color:white;background:#1a1a2e;"><h2>Mars Frontier</h2><p style="color:#ff6b6b;">Ошибка: ' + (e && e.message) + '</p></div>';
     }
 }
+
+try { initYandexSDK(); } catch(e) { _bootIfNeeded(); }
+setTimeout(_bootIfNeeded, 3000);
 </script>
 </body>
 </html>
