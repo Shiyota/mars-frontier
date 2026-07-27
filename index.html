@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Mars Frontier: Colony Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --mars-red: #C1440E; --mars-dark: #8B2500; --mars-light: #E85D04;
+    --sky-dark: #1a1a2e; --sky-mid: #16213e;
+    --accent-gold: #FFD700; --accent-blue: #00BFFF; --accent-green: #32CD32; --accent-purple: #9370DB;
+    --panel-bg: rgba(20, 20, 35, 0.92); --panel-border: rgba(0, 191, 255, 0.3);
+    --text-primary: #ffffff; --text-secondary: #a0a0b0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(180deg, #0d0d1a 0%, #1a0a05 40%, #C1440E 100%);
+    color: var(--text-primary); overflow-x: hidden; min-height: 100vh; position: relative;
+}
+.stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.star { position: absolute; background: white; border-radius: 50%; animation: twinkle 2s infinite; }
+@keyframes twinkle { 0%,100%{opacity:0.3} 50%{opacity:1} }
+body { background-attachment: fixed; }
+.header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--panel-bg); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--panel-border); padding: 8px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.game-title {
+    font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700;
+    background: linear-gradient(90deg, var(--accent-gold), var(--mars-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.epoch-badge {
+    font-family: 'Orbitron', sans-serif; font-size: 10px; padding: 4px 10px;
+    background: linear-gradient(135deg, var(--mars-red), var(--mars-dark));
+    border-radius: 20px; border: 1px solid var(--mars-light);
+    cursor: pointer; transition: all 0.2s;
+}
+.epoch-badge:hover { transform: scale(1.05); box-shadow: 0 0 12px rgba(193,68,14,0.5); }
+.resource-bar {
+    position: fixed; top: 48px; left: 0; right: 0; z-index: 99;
+    background: var(--panel-bg); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--panel-border); padding: 8px 10px;
+    display: flex; justify-content: center; gap: 16px;
+}
+.resource-item {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.resource-icon { font-size: 18px; }
+.resource-value { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; }
+.resource-income { font-size: 10px; color: var(--accent-green); margin-left: 4px; }
+.click-bonus { font-size: 10px; color: var(--accent-gold); margin-left: 4px; }
+.main-content { padding-top: 100px; padding-bottom: 80px; position: relative; z-index: 1; }
+.click-area { display: flex; flex-direction: column; align-items: center; padding: 16px; position: relative; }
+.star-container {
+    position: relative; width: 220px; height: 220px;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer; transition: transform 0.1s; touch-action: manipulation;
+}
+.star-container:active { transform: scale(0.93); }
+.star-visual {
+    width: 140px; height: 140px; border-radius: 50%;
+    position: relative; overflow: hidden;
+    transition: all 0.8s ease;
+    box-shadow: 0 0 50px rgba(255,100,0,0.4), inset -15px -15px 30px rgba(0,0,0,0.3);
+}
+/* Epoch 1: Проксима Центавра — маленькая красная звезда */
+.star-visual.epoch-1 {
+    width: 100px; height: 100px;
+    background: radial-gradient(circle at 35% 35%, #ff4444, #cc0000, #660000);
+    box-shadow: 0 0 30px rgba(204,0,0,0.5), inset -10px -10px 20px rgba(0,0,0,0.4);
+}
+/* Epoch 2: Сириус — яркая бело-голубая */
+.star-visual.epoch-2 {
+    width: 120px; height: 120px;
+    background: radial-gradient(circle at 35% 35%, #e0f0ff, #a0c8ff, #5080cc);
+    box-shadow: 0 0 45px rgba(160,200,255,0.6), inset -12px -12px 25px rgba(0,0,0,0.3);
+}
+/* Epoch 3: Бетельгейзе — красный сверхгигант */
+.star-visual.epoch-3 {
+    width: 160px; height: 160px;
+    background: radial-gradient(circle at 35% 35%, #ff6644, #cc2200, #881100);
+    box-shadow: 0 0 60px rgba(204,34,0,0.5), inset -15px -15px 30px rgba(0,0,0,0.3);
+}
+/* Epoch 4: Ригель — голубой сверхгигант */
+.star-visual.epoch-4 {
+    width: 180px; height: 180px;
+    background: radial-gradient(circle at 35% 35%, #88ccff, #4488dd, #224488);
+    box-shadow: 0 0 70px rgba(68,136,221,0.6), inset -18px -18px 35px rgba(0,0,0,0.3);
+}
+/* Epoch 5: Солнце — наша звезда */
+.star-visual.epoch-5 {
+    width: 200px; height: 200px;
+    background: radial-gradient(circle at 35% 35%, #ffee88, #ffcc00, #ff8800);
+    box-shadow: 0 0 80px rgba(255,200,0,0.7), inset -20px -20px 40px rgba(0,0,0,0.2);
+}
+.star-name {
+    font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--text-secondary);
+    margin-top: 8px; text-align: center;
+}
+.star-name .name { color: var(--accent-gold); font-weight: 700; }
+.click-power {
+    font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; margin-top: 10px;
+    background: linear-gradient(90deg, var(--accent-gold), #FFA500);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.click-hint { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-align: center; }
+.floating-number {
+    position: absolute; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 18px;
+    color: var(--accent-gold); pointer-events: none; animation: floatUp 1.2s ease-out forwards;
+    text-shadow: 0 0 10px rgba(255,215,0,0.6); z-index: 50;
+}
+@keyframes floatUp { 0%{opacity:1;transform:translateY(0)scale(1)} 100%{opacity:0;transform:translateY(-100px)scale(1.4)} }
+.section-title { font-family: 'Orbitron', sans-serif; font-size: 13px; padding: 12px 16px 8px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1px; }
+.buildings-grid { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 0 12px; }
+@media (min-width: 768px) { .buildings-grid { grid-template-columns: 1fr 1fr; } }
+.building-card {
+    background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 12px; padding: 12px;
+    display: flex; align-items: center; gap: 12px; transition: all 0.2s; cursor: pointer;
+}
+.building-card:hover { border-color: var(--accent-gold); transform: translateX(4px); }
+.building-card.locked { opacity: 0.35; pointer-events: none; }
+.building-card.maxed { border-color: var(--accent-gold); background: rgba(255,215,0,0.05); }
+.building-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+.building-info { flex: 1; }
+.building-name { font-weight: 700; font-size: 13px; }
+.building-level { font-size: 10px; color: var(--text-secondary); }
+.building-income { font-size: 11px; color: var(--accent-green); }
+.building-click { font-size: 10px; color: var(--accent-gold); }
+.building-cost { text-align: right; }
+.cost-value { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent-gold); }
+.buy-btn { margin-top: 4px; padding: 5px 14px; background: linear-gradient(135deg, var(--mars-red), var(--mars-dark)); border: none; border-radius: 6px; color: white; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.buy-btn:hover { transform: scale(1.05); box-shadow: 0 0 12px rgba(193,68,14,0.5); }
+.buy-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.prestige-section {
+    margin: 12px; padding: 16px;
+    background: linear-gradient(135deg, rgba(255,69,0,0.1), rgba(147,112,219,0.1));
+    border: 1px solid var(--accent-purple); border-radius: 12px; text-align: center;
+}
+.prestige-title { font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--accent-purple); }
+.prestige-desc { font-size: 11px; color: var(--text-secondary); margin: 8px 0; }
+.prestige-btn {
+    padding: 10px 24px; background: linear-gradient(135deg, var(--accent-purple), #6A0DAD);
+    border: none; border-radius: 8px; color: white; font-family: 'Orbitron', sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.prestige-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(147,112,219,0.5); }
+.popup-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85); z-index: 1000; display: none;
+    justify-content: center; align-items: center; backdrop-filter: blur(5px);
+    padding: 16px;
+}
+.popup-overlay.active { display: flex; }
+.popup {
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: 16px; padding: 20px; max-width: 360px; width: 100%;
+    text-align: center; animation: popupIn 0.3s ease; max-height: 80vh; overflow-y: auto;
+}
+@keyframes popupIn { from { opacity: 0; transform: scale(0.9); } }
+.popup-title { font-family: 'Orbitron', sans-serif; font-size: 16px; margin-bottom: 12px; }
+.popup-text { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
+.popup-value { font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--accent-gold); margin: 8px 0; }
+.popup-btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.popup-btn.primary { background: linear-gradient(135deg, var(--accent-gold), #FFA500); color: #1a1a2e; }
+.popup-btn.secondary { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: var(--panel-bg); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--panel-border); display: flex; justify-content: space-around; padding: 8px 0;
+}
+.nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 16px; cursor: pointer; background: none; border: none; color: var(--text-secondary); transition: all 0.2s; }
+.nav-btn.active { color: var(--accent-gold); }
+.nav-btn:hover { color: var(--text-primary); }
+.nav-icon { font-size: 20px; }
+.nav-label { font-size: 9px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+/* Quests */
+.quests-list { padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.quest-card {
+    background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 12px; padding: 12px;
+    display: flex; align-items: center; gap: 12px; transition: all 0.2s;
+}
+.quest-card.completed { border-color: var(--accent-gold); background: rgba(255,215,0,0.05); }
+.quest-card.claimed { opacity: 0.5; }
+.quest-icon { font-size: 28px; width: 40px; text-align: center; }
+.quest-info { flex: 1; }
+.quest-name { font-weight: 700; font-size: 13px; }
+.quest-desc { font-size: 11px; color: var(--text-secondary); }
+.quest-progress { font-size: 10px; color: var(--accent-blue); margin-top: 2px; }
+.quest-reward { font-size: 11px; color: var(--accent-gold); font-weight: 700; }
+.quest-btn {
+    padding: 6px 14px; background: linear-gradient(135deg, var(--accent-gold), #FFA500);
+    border: none; border-radius: 6px; color: #1a1a2e; font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+}
+.quest-btn:hover { transform: scale(1.05); }
+.quest-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+/* Epochs menu */
+.epochs-menu { padding: 0 8px; display: flex; flex-direction: column; gap: 10px; }
+.epoch-card {
+    background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 12px; padding: 14px;
+    text-align: left; transition: all 0.2s;
+}
+.epoch-card.current { border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(255,215,0,0.15); }
+.epoch-card.locked { opacity: 0.4; }
+.epoch-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.epoch-card-icon { font-size: 28px; }
+.epoch-card-title { font-family: 'Orbitron', sans-serif; font-size: 14px; }
+.epoch-card-star { font-size: 11px; color: var(--text-secondary); }
+.epoch-card-req { font-size: 11px; color: var(--accent-gold); margin-bottom: 6px; }
+.epoch-card-buildings { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+.epoch-card-bonus { font-size: 11px; color: var(--accent-green); margin-top: 6px; }
+/* Stats */
+.stats-grid { padding: 0 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 10px; padding: 12px; text-align: center; }
+.stat-value { font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--accent-gold); }
+.stat-label { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+.toast {
+    position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+    background: var(--panel-bg); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 10px 18px; z-index: 200; font-size: 12px; display: none;
+    animation: toastIn 0.3s ease; white-space: nowrap;
+}
+.toast.active { display: block; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+.particle { position: absolute; pointer-events: none; border-radius: 50%; animation: particleFly 0.8s ease-out forwards; z-index: 50; }
+@keyframes particleFly { 0%{opacity:1;transform:translate(0,0)scale(1)} 100%{opacity:0;transform:translate(var(--tx),var(--ty))scale(0)} }
+.close-btn { position: absolute; top: 10px; right: 14px; background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer; }
+.close-btn:hover { color: white; }
+.loading-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0d0d1a; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
+.loading-screen.hidden { opacity: 0; pointer-events: none; }
+.loading-title { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 900; background: linear-gradient(90deg, var(--accent-gold), var(--mars-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px; }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.auth-section { padding: 16px; text-align: center; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 12px; margin: 12px; }
+.auth-btn { padding: 10px 20px; background: linear-gradient(135deg, #FC3F1D, #FF6F00); border: none; border-radius: 8px; color: white; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
+.auth-note { font-size: 10px; color: var(--text-secondary); margin-top: 6px; }
+@media (max-width: 767px) {
+    body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; overscroll-behavior: none; touch-action: none; -ms-touch-action: none; }
+    .main-content { position: fixed; top: 100px; bottom: 56px; left: 0; right: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-top: 0; padding-bottom: 0; z-index: 1; }
+}
+@media (min-width: 768px) {
+    .main-content { max-width: 1000px; margin: 0 auto; }
+    .buildings-grid { grid-template-columns: 1fr 1fr; }
+    .star-container { width: min(35vmin, 340px); height: min(35vmin, 340px); }
+    .star-visual { width: min(22vmin, 220px); height: min(22vmin, 220px); }
+    .star-visual.epoch-1 { width: min(15vmin, 150px); height: min(15vmin, 150px); }
+    .star-visual.epoch-2 { width: min(18vmin, 180px); height: min(18vmin, 180px); }
+    .star-visual.epoch-3 { width: min(25vmin, 250px); height: min(25vmin, 250px); }
+    .star-visual.epoch-4 { width: min(28vmin, 280px); height: min(28vmin, 280px); }
+    .star-visual.epoch-5 { width: min(32vmin, 320px); height: min(32vmin, 320px); }
+    .game-title { font-size: min(3vmin, 24px); }
+    .resource-value { font-size: min(3vmin, 24px); }
+}
+</style>
+</head>
+<body>
+<div class="loading-screen" id="loadingScreen">
+    <div class="loading-title">MARS FRONTIER</div>
+    <div class="loading-spinner"></div>
+</div>
+<div class="stars" id="stars"></div>
+<div class="header">
+    <div class="game-title">⚡ MARS FRONTIER</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+        <button class="icon-btn" id="soundToggle" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:white;" title="Звук">🔊</button>
+        <div class="epoch-badge" id="epochBadge" onclick="openEpochsMenu()">ЭПОХА 1</div>
+    </div>
+</div>
+<div class="resource-bar">
+    <div class="resource-item">
+        <span class="resource-icon">⚡</span>
+        <span class="resource-value" id="res-energy">0</span>
+        <span class="resource-income" id="inc-energy">+0/сек</span>
+    </div>
+    <div class="resource-item">
+        <span class="resource-icon">👆</span>
+        <span class="resource-value" id="res-click">+1</span>
+        <span class="click-bonus">за клик</span>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Epochs Menu Popup -->
+<div class="popup-overlay" id="epochsPopup">
+    <div class="popup" style="max-width: 420px;">
+        <button class="close-btn" onclick="closeEpochsMenu()">✕</button>
+        <div class="popup-title">🌌 Эпохи колонизации</div>
+        <div class="popup-text">Развивай колонию, переходя от звезды к звезде</div>
+        <div class="epochs-menu" id="epochsMenu"></div>
+    </div>
+</div>
+
+<!-- Offline Popup -->
+<div class="popup-overlay" id="offlinePopup">
+    <div class="popup">
+        <div class="popup-title offline-title">🌍 Добро пожаловать обратно!</div>
+        <div class="popup-text offline-desc">Пока тебя не было, колония добывала энергию:</div>
+        <div class="popup-value" id="offlineValue">+0</div>
+        <div class="popup-text" style="font-size:11px;"><span id="offlineTimeLabel">Время отсутствия:</span> <span id="offlineTime">0</span></div>
+        <button class="popup-btn primary" id="offlineDouble">⚡ Удвоить за рекламу</button>
+        <button class="popup-btn secondary" id="offlineClose">Принять</button>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="tab-content active" id="tab-game">
+        <div class="click-area">
+            <div class="star-container" id="starContainer">
+                <div class="star-visual epoch-1" id="starVisual"></div>
+            </div>
+            <div class="star-name" id="starName"><span class="name">Проксима Центавра</span><br>ближайшая звезда к Солнцу</div>
+            <div class="click-power" id="clickPower">+1 Энергии</div>
+            <div class="click-hint" id="clickHint">Кликай по звезде!</div>
+        </div>
+        <div class="section-title">🏗️ Здания</div>
+        <div class="buildings-grid" id="buildingsGrid"></div>
+        <div class="prestige-section" id="prestigeSection" style="display:none">
+            <div class="prestige-title">🚀 ПРЕСТИЖ ДОСТУПЕН</div>
+            <div class="prestige-desc">Сбрось прогресс и получи Токены для перманентных бонусов!</div>
+            <div style="font-size:11px; color:var(--accent-purple); margin:8px 0;"><span id="prestigeTokensLabel">Токенов за сброс:</span> <span id="prestigeTokens">0</span></div>
+            <button class="prestige-btn" id="prestigeBtn">ВЫПОЛНИТЬ ПРЕСТИЖ</button>
+        </div>
+        <div class="auth-section" id="authSection" style="display:none">
+            <p class="popup-text">Сохраняйте прогресс в облаке и играйте на разных устройствах</p>
+            <button class="auth-btn" id="authBtn">👤 Войти с Яндекс ID</button>
+            <div class="auth-note">Или продолжайте без авторизации — прогресс сохраняется локально</div>
+        </div>
+    </div>
+    <div class="tab-content" id="tab-quests">
+        <div class="section-title">📋 Задания</div>
+        <div class="quests-list" id="questsList"></div>
+    </div>
+    <div class="tab-content" id="tab-stats">
+        <div class="section-title">📊 Статистика</div>
+        <div class="stats-grid" id="statsGrid"></div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <button class="nav-btn active" data-tab="tab-game"><span class="nav-icon">🎮</span><span class="nav-label">Игра</span></button>
+    <button class="nav-btn" data-tab="tab-quests"><span class="nav-icon">📋</span><span class="nav-label">Задания</span></button>
+    <button class="nav-btn" data-tab="tab-stats"><span class="nav-icon">📊</span><span class="nav-label">Статистика</span></button>
+</div>
+
+<script>
+var _sdkReady = false;
+var _gameBooted = false;
+function _bootIfNeeded() {
+    if (_gameBooted) return;
+    _gameBooted = true;
+    bootGame();
+}
+try { initYandexSDK(); } catch(e) { _bootIfNeeded(); }
+setTimeout(_bootIfNeeded, 3000);
+// ═══════════════════════════════════════════════════════════════════════════════
+// MARS FRONTIER v2.0 — ПЕРЕРАБОТАННЫЙ ДВИЖОК
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const CONFIG = {
+    offlineMaxHours: 4, offlineEfficiency: 0.5, clickBasePower: 1,
+    saveInterval: 15000, tickRate: 100
+};
+
+// ─── I18N ───
+let gameLang = 'ru';
+const I18N = {
+    ru: {
+        epoch: 'ЭПОХА', buildings: 'Здания', quests: 'Задания', stats: 'Статистика', game_tab: 'Игра',
+        sound: 'Звук', prestige_available: 'ПРЕСТИЖ ДОСТУПЕН', prestige_desc: 'Сбрось прогресс и получи Токены для перманентных бонусов!',
+        prestige_tokens: 'Токенов за сброс:', prestige_btn: 'ВЫПОЛНИТЬ ПРЕСТИЖ',
+        auth_desc: 'Сохраняйте прогресс в облаке и играйте на разных устройствах', auth_btn: 'Войти с Яндекс ID',
+        auth_note: 'Или продолжайте без авторизации — прогресс сохраняется локально',
+        offline_title: 'Добро пожаловать обратно!', offline_desc: 'Пока тебя не было, колония добывала энергию:',
+        offline_time: 'Время отсутствия:', offline_double: 'Удвоить за рекламу', offline_accept: 'Принять',
+        click_hint: 'Кликай по звезде!',
+        buy: 'КУПИТЬ', claim: 'ПОЛУЧИТЬ', claimed: '✓ Получено', in_progress: 'В процессе',
+        reward_prefix: '🎁 Награда: ',
+        level: 'Ур.', max: 'MAX', per_sec: '/сек', to_click: 'к клику',
+        epoch_label: 'Эпоха', requires: '⚡ Требуется:', click_bonus: '👆 Бонус к клику:', current_epoch: '★ Текущая эпоха', completed: '✓ Пройдена',
+        toast_double: '⚡ Доход удвоен!', toast_income: '✅ Доход получен!', toast_ad_unavailable: '⚡ Реклама недоступна', toast_ad_closed: '❌ Просмотр не завершён',
+        toast_auth: '✅ Авторизация выполнена',
+        stat_playtime: 'Время игры', stat_clicks: 'Всего кликов', stat_energy: 'Всего энергии',
+        stat_click_power: 'Сила клика', stat_passive: 'Пассивный доход', stat_epoch: 'Эпоха',
+        stat_prestiges: 'Престижей', stat_tokens: 'Токенов', stat_quests: 'Заданий выполнено', stat_click_bonus: 'Бонус к клику',
+        hour: 'ч', min: 'м',
+        building: {
+            solar_panel: ['Солнечная панель', '+1 энергии/сек'], battery: ['Аккумулятор', '+5 энергии/сек'],
+            relay: ['Ретранслятор', '+25 энергии/сек'], drill: ['Буровая установка', '+100 энергии/сек'],
+            water_cleaner: ['Очиститель воды', '+50 эн/сек, +2 к клику'], habitat: ['Жилой блок', '+10 эн/сек, +1 к клику'],
+            mine: ['Шахта', '+500 энергии/сек'], hydroponics: ['Гидропоника', '+200 эн/сек, +5 к клику'],
+            factory: ['Фабрика', '+2000 энергии/сек'], research_lab: ['Исслед. центр', '+1000 эн/сек, +10 к клику'],
+            spaceport: ['Космопорт', '+10000 энергии/сек'], reactor: ['Ядерный реактор', '+50000 энергии/сек'],
+            terraformer: ['Терраформатор', '+100K эн/сек, +50 к клику'], atmosphere_gen: ['Генератор атмосферы', '+500K энергии/сек'],
+            ocean_park: ['Океанический парк', '+2M эн/сек, +100 к клику']
+        },
+        epoch_data: {
+            1: ['ПОСАДКА', 'Проксима Центавра', 'ближайшая звезда к Солнцу'],
+            2: ['БАЗА', 'Сириус', 'самая яркая звезда ночного неба'],
+            3: ['ГОРОД', 'Бетельгейзе', 'красный сверхгигант'],
+            4: ['МЕГАПОЛИС', 'Ригель', 'голубой сверхгигант в Орионе'],
+            5: ['ТЕРРАФОРМАЦИЯ', 'Солнце', 'наша родная звезда']
+        },
+        quest: {
+            q_click1: ['Первый шаг', 'Сделай 1 клик', '+1 к силе клика'],
+            q_energy1k: ['Энергетик', 'Накопи 1 000 энергии', '+2 к силе клика'],
+            q_solar10: ['Солнечная ферма', 'Улучши Солнечную панель до 10 уровня', '+3 к силе клика'],
+            q_battery5: ['Запас энергии', 'Улучши Аккумулятор до 5 уровня', '+2 к силе клика'],
+            q_relay3: ['Связь с Землёй', 'Улучши Ретранслятор до 3 уровня', '+5 к силе клика'],
+            q_epoch2: ['Новая звезда', 'Достигни Эпохи 2 (Сириус)', '+10 к силе клика'],
+            q_clicks100: ['Кликер', 'Сделай 100 кликов', '+5 к силе клика'],
+            q_energy100k: ['Энергомагнат', 'Накопи 100 000 энергии', '+10 к силе клика'],
+            q_drill10: ['Буровик', 'Улучши Буровую установку до 10 уровня', '+15 к силе клика'],
+            q_water5: ['Водопроводчик', 'Улучши Очиститель воды до 5 уровня', '+10 к силе клика'],
+            q_habitat10: ['Застройщик', 'Улучши Жилой блок до 10 уровня', '+10 к силе клика'],
+            q_epoch3: ['Город мечты', 'Достигни Эпохи 3 (Бетельгейзе)', '+25 к силе клика'],
+            q_clicks1k: ['Кликер-мастер', 'Сделай 1 000 кликов', '+20 к силе клика'],
+            q_energy10m: ['Миллиардер', 'Накопи 10 000 000 энергии', '+30 к силе клика'],
+            q_mine10: ['Шахтёр', 'Улучши Шахту до 10 уровня', '+30 к силе клика'],
+            q_hydro10: ['Фермер Марса', 'Улучши Гидропонику до 10 уровня', '+25 к силе клика'],
+            q_factory5: ['Промышленник', 'Улучши Фабрику до 5 уровня', '+40 к силе клика'],
+            q_epoch4: ['Мегаполис', 'Достигни Эпохи 4 (Ригель)', '+50 к силе клика'],
+            q_clicks10k: ['Кликер-бог', 'Сделай 10 000 кликов', '+50 к силе клика'],
+            q_energy1b: ['Энергия вселенной', 'Накопи 1 000 000 000 энергии', '+100 к силе клика'],
+            q_research5: ['Эйнштейн', 'Улучши Исслед. центр до 5 уровня', '+60 к силе клика'],
+            q_spaceport: ['Космопорт открыт', 'Купи Космопорт', '+80 к силе клика'],
+            q_reactor: ['Ядерщик', 'Купи Ядерный реактор', '+100 к силе клика'],
+            q_epoch5: ['Новая Земля', 'Достигни Эпохи 5 (Солнце)', '+200 к силе клика'],
+            q_terraform10: ['Первые лужи', 'Улучши Терраформатор до 10 уровня', '+150 к силе клика'],
+            q_prestige1: ['Престиж', 'Выполни первый престиж', '+100 к силе клика'],
+            q_prestige5: ['Бессмертный', 'Выполни 5 престижей', '+300 к силе клика'],
+            q_all_buildings: ['Коллекционер', 'Купи хотя бы 1 каждого здания', '+50 к силе клика'],
+            q_energy1t: ['Легенда Марса', 'Накопи 1 000 000 000 000 энергии', '+500 к силе клика']
+        }
+    },
+    en: {
+        epoch: 'EPOCH', buildings: 'Buildings', quests: 'Quests', stats: 'Stats', game_tab: 'Game',
+        sound: 'Sound', prestige_available: 'PRESTIGE AVAILABLE', prestige_desc: 'Reset progress and get Tokens for permanent bonuses!',
+        prestige_tokens: 'Tokens on reset:', prestige_btn: 'DO PRESTIGE',
+        auth_desc: 'Save progress in the cloud and play on different devices', auth_btn: 'Sign in with Yandex ID',
+        auth_note: 'Or continue without sign-in — progress is saved locally',
+        offline_title: 'Welcome back!', offline_desc: 'While you were away, the colony mined energy:',
+        offline_time: 'Time away:', offline_double: 'Double via ad', offline_accept: 'Accept',
+        click_hint: 'Click the star!',
+        buy: 'BUY', claim: 'CLAIM', claimed: '✓ Claimed', in_progress: 'In progress',
+        reward_prefix: '🎁 Reward: ',
+        level: 'Lvl', max: 'MAX', per_sec: '/sec', to_click: 'to click',
+        epoch_label: 'Epoch', requires: '⚡ Required:', click_bonus: '👆 Click bonus:', current_epoch: '★ Current epoch', completed: '✓ Completed',
+        toast_double: '⚡ Income doubled!', toast_income: '✅ Income received!', toast_ad_unavailable: '⚡ Ad unavailable', toast_ad_closed: '❌ Ad not completed',
+        toast_auth: '✅ Signed in successfully',
+        stat_playtime: 'Play time', stat_clicks: 'Total clicks', stat_energy: 'Total energy',
+        stat_click_power: 'Click power', stat_passive: 'Passive income', stat_epoch: 'Epoch',
+        stat_prestiges: 'Prestiges', stat_tokens: 'Tokens', stat_quests: 'Quests completed', stat_click_bonus: 'Click bonus',
+        hour: 'h', min: 'm',
+        building: {
+            solar_panel: ['Solar Panel', '+1 energy/sec'], battery: ['Battery', '+5 energy/sec'],
+            relay: ['Relay', '+25 energy/sec'], drill: ['Drill', '+100 energy/sec'],
+            water_cleaner: ['Water Purifier', '+50 e/s, +2 click'], habitat: ['Habitat', '+10 e/s, +1 click'],
+            mine: ['Mine', '+500 energy/sec'], hydroponics: ['Hydroponics', '+200 e/s, +5 click'],
+            factory: ['Factory', '+2000 energy/sec'], research_lab: ['Research Lab', '+1000 e/s, +10 click'],
+            spaceport: ['Spaceport', '+10000 energy/sec'], reactor: ['Reactor', '+50000 energy/sec'],
+            terraformer: ['Terraformer', '+100K e/s, +50 click'], atmosphere_gen: ['Atmosphere Gen', '+500K energy/sec'],
+            ocean_park: ['Ocean Park', '+2M e/s, +100 click']
+        },
+        epoch_data: {
+            1: ['LANDING', 'Proxima Centauri', 'closest star to the Sun'],
+            2: ['BASE', 'Sirius', 'brightest star in the night sky'],
+            3: ['CITY', 'Betelgeuse', 'red supergiant'],
+            4: ['METROPOLIS', 'Rigel', 'blue supergiant in Orion'],
+            5: ['TERRAFORMING', 'Sun', 'our home star']
+        },
+        quest: {
+            q_click1: ['First Step', 'Make 1 click', '+1 click power'],
+            q_energy1k: ['Energizer', 'Accumulate 1,000 energy', '+2 click power'],
+            q_solar10: ['Solar Farm', 'Upgrade Solar Panel to level 10', '+3 click power'],
+            q_battery5: ['Power Reserve', 'Upgrade Battery to level 5', '+2 click power'],
+            q_relay3: ['Earth Connection', 'Upgrade Relay to level 3', '+5 click power'],
+            q_epoch2: ['New Star', 'Reach Epoch 2 (Sirius)', '+10 click power'],
+            q_clicks100: ['Clicker', 'Make 100 clicks', '+5 click power'],
+            q_energy100k: ['Energy Magnate', 'Accumulate 100,000 energy', '+10 click power'],
+            q_drill10: ['Driller', 'Upgrade Drill to level 10', '+15 click power'],
+            q_water5: ['Plumber', 'Upgrade Water Purifier to level 5', '+10 click power'],
+            q_habitat10: ['Builder', 'Upgrade Habitat to level 10', '+10 click power'],
+            q_epoch3: ['Dream City', 'Reach Epoch 3 (Betelgeuse)', '+25 click power'],
+            q_clicks1k: ['Click Master', 'Make 1,000 clicks', '+20 click power'],
+            q_energy10m: ['Billionaire', 'Accumulate 10,000,000 energy', '+30 click power'],
+            q_mine10: ['Miner', 'Upgrade Mine to level 10', '+30 click power'],
+            q_hydro10: ['Mars Farmer', 'Upgrade Hydroponics to level 10', '+25 click power'],
+            q_factory5: ['Industrialist', 'Upgrade Factory to level 5', '+40 click power'],
+            q_epoch4: ['Megapolis', 'Reach Epoch 4 (Rigel)', '+50 click power'],
+            q_clicks10k: ['Click God', 'Make 10,000 clicks', '+50 click power'],
+            q_energy1b: ['Universal Energy', 'Accumulate 1,000,000,000 energy', '+100 click power'],
+            q_research5: ['Einstein', 'Upgrade Research Lab to level 5', '+60 click power'],
+            q_spaceport: ['Spaceport Open', 'Buy Spaceport', '+80 click power'],
+            q_reactor: ['Nuclear', 'Buy Reactor', '+100 click power'],
+            q_epoch5: ['New Earth', 'Reach Epoch 5 (Sun)', '+200 click power'],
+            q_terraform10: ['First Puddles', 'Upgrade Terraformer to level 10', '+150 click power'],
+            q_prestige1: ['Prestige', 'Perform first prestige', '+100 click power'],
+            q_prestige5: ['Immortal', 'Perform 5 prestiges', '+300 click power'],
+            q_all_buildings: ['Collector', 'Buy at least 1 of each building', '+50 click power'],
+            q_energy1t: ['Mars Legend', 'Accumulate 1,000,000,000,000 energy', '+500 click power']
+        }
+    }
+};
+
+function t(key) { return (I18N[gameLang] && I18N[gameLang][key]) || (I18N['ru'][key]) || key; }
+function tPath(arr) { var o = I18N[gameLang] || I18N['ru']; for (var i = 0; i < arr.length; i++) { if (o && o[arr[i]] !== undefined) o = o[arr[i]]; else return arr[i]; } return o; }
+function tB(id, i) { var d = I18N.ru.building[id]; var e = I18N[gameLang] && I18N[gameLang].building && I18N[gameLang].building[id]; return (e ? e[i] : d[i]); }
+function tE(num, i) { var d = I18N.ru.epoch_data[num]; var e = I18N[gameLang] && I18N[gameLang].epoch_data && I18N[gameLang].epoch_data[num]; return (e ? e[i] : d[i]); }
+function tQ(id, i) { var d = I18N.ru.quest[id]; var e = I18N[gameLang] && I18N[gameLang].quest && I18N[gameLang].quest[id]; return (e ? e[i] : d[i]); }
+
+// ─── ЭПОХИ И ЗВЁЗДЫ ───
+const EPOCHS = {
+    1: { name: 'ПОСАДКА', target: 10000, star: 'Проксима Центавра', starDesc: 'ближайшая звезда к Солнцу', starEmoji: '🔴', clickBonus: 0 },
+    2: { name: 'БАЗА', target: 500000, star: 'Сириус', starDesc: 'самая яркая звезда ночного неба', starEmoji: '🔵', clickBonus: 5 },
+    3: { name: 'ГОРОД', target: 50000000, star: 'Бетельгейзе', starDesc: 'красный сверхгигант', starEmoji: '🔴', clickBonus: 25 },
+    4: { name: 'МЕГАПОЛИС', target: 10000000000, star: 'Ригель', starDesc: 'голубой сверхгигант в Орионе', starEmoji: '🔵', clickBonus: 100 },
+    5: { name: 'ТЕРРАФОРМАЦИЯ', target: 1000000000000, star: 'Солнце', starDesc: 'наша родная звезда', starEmoji: '🟡', clickBonus: 500 }
+};
+
+// ─── ЗДАНИЯ — АРИФМЕТИЧЕСКАЯ ПРОГРЕССИЯ ───
+// cost = baseCost + level * costIncrement
+// income = baseIncome * level
+// clickBonus = baseClickBonus * level (если есть)
+const BUILDINGS = {
+    // Эпоха 1
+    solar_panel: { name: 'Солнечная панель', icon: '☀️', epoch: 1, baseCost: 15, costInc: 5, baseIncome: 1, baseClick: 0, maxLevel: 50, desc: '+1 энергии/сек' },
+    battery: { name: 'Аккумулятор', icon: '🔋', epoch: 1, baseCost: 100, costInc: 25, baseIncome: 5, baseClick: 0, maxLevel: 50, desc: '+5 энергии/сек' },
+    relay: { name: 'Ретранслятор', icon: '📡', epoch: 1, baseCost: 500, costInc: 100, baseIncome: 25, baseClick: 0, maxLevel: 40, desc: '+25 энергии/сек' },
+    // Эпоха 2
+    drill: { name: 'Буровая установка', icon: '🏗️', epoch: 2, baseCost: 2000, costInc: 300, baseIncome: 100, baseClick: 0, maxLevel: 50, desc: '+100 энергии/сек' },
+    water_cleaner: { name: 'Очиститель воды', icon: '💧', epoch: 2, baseCost: 5000, costInc: 500, baseIncome: 50, baseClick: 2, maxLevel: 50, desc: '+50 эн/сек, +2 к клику' },
+    habitat: { name: 'Жилой блок', icon: '🏠', epoch: 2, baseCost: 10000, costInc: 800, baseIncome: 10, baseClick: 1, maxLevel: 40, desc: '+10 эн/сек, +1 к клику' },
+    // Эпоха 3
+    mine: { name: 'Шахта', icon: '⛏️', epoch: 3, baseCost: 100000, costInc: 5000, baseIncome: 500, baseClick: 0, maxLevel: 50, desc: '+500 энергии/сек' },
+    hydroponics: { name: 'Гидропоника', icon: '🌿', epoch: 3, baseCost: 250000, costInc: 10000, baseIncome: 200, baseClick: 5, maxLevel: 50, desc: '+200 эн/сек, +5 к клику' },
+    factory: { name: 'Фабрика', icon: '🏭', epoch: 3, baseCost: 1000000, costInc: 50000, baseIncome: 2000, baseClick: 0, maxLevel: 40, desc: '+2000 энергии/сек' },
+    // Эпоха 4
+    research_lab: { name: 'Исслед. центр', icon: '🔬', epoch: 4, baseCost: 50000000, costInc: 2000000, baseIncome: 1000, baseClick: 10, maxLevel: 50, desc: '+1000 эн/сек, +10 к клику' },
+    spaceport: { name: 'Космопорт', icon: '🚀', epoch: 4, baseCost: 200000000, costInc: 8000000, baseIncome: 10000, baseClick: 0, maxLevel: 40, desc: '+10000 энергии/сек' },
+    reactor: { name: 'Ядерный реактор', icon: '⚛️', epoch: 4, baseCost: 1000000000, costInc: 50000000, baseIncome: 50000, baseClick: 0, maxLevel: 30, desc: '+50000 энергии/сек' },
+    // Эпоха 5
+    terraformer: { name: 'Терраформатор', icon: '🌍', epoch: 5, baseCost: 10000000000, costInc: 500000000, baseIncome: 100000, baseClick: 50, maxLevel: 100, desc: '+100K эн/сек, +50 к клику' },
+    atmosphere_gen: { name: 'Генератор атмосферы', icon: '💨', epoch: 5, baseCost: 50000000000, costInc: 2000000000, baseIncome: 500000, baseClick: 0, maxLevel: 80, desc: '+500K энергии/сек' },
+    ocean_park: { name: 'Океанический парк', icon: '🌊', epoch: 5, baseCost: 500000000000, costInc: 20000000000, baseIncome: 2000000, baseClick: 100, maxLevel: 50, desc: '+2M эн/сек, +100 к клику' }
+};
+
+// ─── ЗАДАНИЯ (QUESTS) — с наградами в виде бонуса к клику ───
+const QUESTS = [
+    { id: 'q_click1', name: 'Первый шаг', desc: 'Сделай 1 клик', icon: '👆', req: (s) => s.totalClicks >= 1, reward: 1, rewardText: '+1 к силе клика' },
+    { id: 'q_energy1k', name: 'Энергетик', desc: 'Накопи 1 000 энергии', icon: '⚡', req: (s) => s.totalEnergy >= 1000, reward: 2, rewardText: '+2 к силе клика' },
+    { id: 'q_solar10', name: 'Солнечная ферма', desc: 'Улучши Солнечную панель до 10 уровня', icon: '☀️', req: (s) => s.buildings.solar_panel >= 10, reward: 3, rewardText: '+3 к силе клика' },
+    { id: 'q_battery5', name: 'Запас энергии', desc: 'Улучши Аккумулятор до 5 уровня', icon: '🔋', req: (s) => s.buildings.battery >= 5, reward: 2, rewardText: '+2 к силе клика' },
+    { id: 'q_relay3', name: 'Связь с Землёй', desc: 'Улучши Ретранслятор до 3 уровня', icon: '📡', req: (s) => s.buildings.relay >= 3, reward: 5, rewardText: '+5 к силе клика' },
+    { id: 'q_epoch2', name: 'Новая звезда', desc: 'Достигни Эпохи 2 (Сириус)', icon: '🔵', req: (s) => s.epoch >= 2, reward: 10, rewardText: '+10 к силе клика' },
+    { id: 'q_clicks100', name: 'Кликер', desc: 'Сделай 100 кликов', icon: '👆', req: (s) => s.totalClicks >= 100, reward: 5, rewardText: '+5 к силе клика' },
+    { id: 'q_energy100k', name: 'Энергомагнат', desc: 'Накопи 100 000 энергии', icon: '⚡', req: (s) => s.totalEnergy >= 100000, reward: 10, rewardText: '+10 к силе клика' },
+    { id: 'q_drill10', name: 'Буровик', desc: 'Улучши Буровую установку до 10 уровня', icon: '🏗️', req: (s) => s.buildings.drill >= 10, reward: 15, rewardText: '+15 к силе клика' },
+    { id: 'q_water5', name: 'Водопроводчик', desc: 'Улучши Очиститель воды до 5 уровня', icon: '💧', req: (s) => s.buildings.water_cleaner >= 5, reward: 10, rewardText: '+10 к силе клика' },
+    { id: 'q_habitat10', name: 'Застройщик', desc: 'Улучши Жилой блок до 10 уровня', icon: '🏠', req: (s) => s.buildings.habitat >= 10, reward: 10, rewardText: '+10 к силе клика' },
+    { id: 'q_epoch3', name: 'Город мечты', desc: 'Достигни Эпохи 3 (Бетельгейзе)', icon: '🔴', req: (s) => s.epoch >= 3, reward: 25, rewardText: '+25 к силе клика' },
+    { id: 'q_clicks1k', name: 'Кликер-мастер', desc: 'Сделай 1 000 кликов', icon: '👆', req: (s) => s.totalClicks >= 1000, reward: 20, rewardText: '+20 к силе клика' },
+    { id: 'q_energy10m', name: 'Миллиардер', desc: 'Накопи 10 000 000 энергии', icon: '💰', req: (s) => s.totalEnergy >= 10000000, reward: 30, rewardText: '+30 к силе клика' },
+    { id: 'q_mine10', name: 'Шахтёр', desc: 'Улучши Шахту до 10 уровня', icon: '⛏️', req: (s) => s.buildings.mine >= 10, reward: 30, rewardText: '+30 к силе клика' },
+    { id: 'q_hydro10', name: 'Фермер Марса', desc: 'Улучши Гидропонику до 10 уровня', icon: '🌿', req: (s) => s.buildings.hydroponics >= 10, reward: 25, rewardText: '+25 к силе клика' },
+    { id: 'q_factory5', name: 'Промышленник', desc: 'Улучши Фабрику до 5 уровня', icon: '🏭', req: (s) => s.buildings.factory >= 5, reward: 40, rewardText: '+40 к силе клика' },
+    { id: 'q_epoch4', name: 'Мегаполис', desc: 'Достигни Эпохи 4 (Ригель)', icon: '🔵', req: (s) => s.epoch >= 4, reward: 50, rewardText: '+50 к силе клика' },
+    { id: 'q_clicks10k', name: 'Кликер-бог', desc: 'Сделай 10 000 кликов', icon: '👆', req: (s) => s.totalClicks >= 10000, reward: 50, rewardText: '+50 к силе клика' },
+    { id: 'q_energy1b', name: 'Энергия вселенной', desc: 'Накопи 1 000 000 000 энергии', icon: '⚡', req: (s) => s.totalEnergy >= 1000000000, reward: 100, rewardText: '+100 к силе клика' },
+    { id: 'q_research5', name: 'Эйнштейн', desc: 'Улучши Исслед. центр до 5 уровня', icon: '🔬', req: (s) => s.buildings.research_lab >= 5, reward: 60, rewardText: '+60 к силе клика' },
+    { id: 'q_spaceport', name: 'Космопорт открыт', desc: 'Купи Космопорт', icon: '🚀', req: (s) => s.buildings.spaceport >= 1, reward: 80, rewardText: '+80 к силе клика' },
+    { id: 'q_reactor', name: 'Ядерщик', desc: 'Купи Ядерный реактор', icon: '⚛️', req: (s) => s.buildings.reactor >= 1, reward: 100, rewardText: '+100 к силе клика' },
+    { id: 'q_epoch5', name: 'Новая Земля', desc: 'Достигни Эпохи 5 (Солнце)', icon: '🟡', req: (s) => s.epoch >= 5, reward: 200, rewardText: '+200 к силе клика' },
+    { id: 'q_terraform10', name: 'Первые лужи', desc: 'Улучши Терраформатор до 10 уровня', icon: '🌍', req: (s) => s.buildings.terraformer >= 10, reward: 150, rewardText: '+150 к силе клика' },
+    { id: 'q_prestige1', name: 'Престиж', desc: 'Выполни первый престиж', icon: '🔄', req: (s) => s.prestigeCount >= 1, reward: 100, rewardText: '+100 к силе клика' },
+    { id: 'q_prestige5', name: 'Бессмертный', desc: 'Выполни 5 престижей', icon: '👑', req: (s) => s.prestigeCount >= 5, reward: 300, rewardText: '+300 к силе клика' },
+    { id: 'q_all_buildings', name: 'Коллекционер', desc: 'Купи хотя бы 1 каждого здания', icon: '🏗️', req: (s) => Object.keys(BUILDINGS).every(id => (s.buildings[id]||0) >= 1), reward: 50, rewardText: '+50 к силе клика' },
+    { id: 'q_energy1t', name: 'Легенда Марса', desc: 'Накопи 1 000 000 000 000 энергии', icon: '🏆', req: (s) => s.totalEnergy >= 1000000000000, reward: 500, rewardText: '+500 к силе клика' }
+];
+
+// ─── STATE ───
+let state = {
+    energy: 0, totalEnergy: 0, totalClicks: 0,
+    buildings: {}, epoch: 1, prestigeCount: 0, tokens: 0,
+    questBonus: 0, claimedQuests: [],
+    lastSave: Date.now(), lastTick: Date.now(), stats: { startTime: Date.now() },
+    version: 2
+};
+
+function formatNumber(num) {
+    if (num >= 1e15) return (num / 1e15).toFixed(2) + 'Q';
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return Math.floor(num).toString();
+}
+
+function getBuildingCost(id, level) {
+    const b = BUILDINGS[id];
+    return b.baseCost + level * b.costInc;
+}
+
+function getBuildingIncome(id, level) {
+    const b = BUILDINGS[id];
+    return b.baseIncome * level;
+}
+
+function getBuildingClickBonus(id, level) {
+    const b = BUILDINGS[id];
+    return b.baseClick * level;
+}
+
+function getTotalPassiveIncome() {
+    let income = 0;
+    Object.keys(BUILDINGS).forEach(id => {
+        const level = state.buildings[id] || 0;
+        if (level > 0 && state.epoch >= BUILDINGS[id].epoch) {
+            income += getBuildingIncome(id, level);
+        }
+    });
+    return income;
+}
+
+function getTotalClickBonus() {
+    let bonus = state.questBonus;
+    const epochBonus = EPOCHS[state.epoch] ? EPOCHS[state.epoch].clickBonus : 0;
+    bonus += epochBonus;
+    Object.keys(BUILDINGS).forEach(id => {
+        const level = state.buildings[id] || 0;
+        if (level > 0 && state.epoch >= BUILDINGS[id].epoch) {
+            bonus += getBuildingClickBonus(id, level);
+        }
+    });
+    return bonus;
+}
+
+function getClickPower() {
+    return CONFIG.clickBasePower + getTotalClickBonus();
+}
+
+// ─── SAVE / LOAD ───
+function saveGame() {
+    state.lastSave = Date.now();
+    try { localStorage.setItem('marsFrontier_v2', JSON.stringify(state)); } catch(e) {}
+    if (ysdkInstance) {
+        try {
+            ysdkInstance.getPlayer().then(function(p) {
+                if (p) p.setData({ save: JSON.stringify(state) }).catch(function(){});
+            }).catch(function(){});
+        } catch(e) {}
+    }
+}
+
+function loadGame() {
+    const saved = localStorage.getItem('marsFrontier_v2');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (parsed.version !== 2) { resetGame(); return; }
+            // Слияние с дефолтным state для совместимости
+            state = { ...state, ...parsed };
+            if (!state.buildings) state.buildings = {};
+            if (!state.claimedQuests) state.claimedQuests = [];
+            if (state.questBonus === undefined) state.questBonus = 0;
+            Object.keys(BUILDINGS).forEach(id => {
+                if (state.buildings[id] === undefined) state.buildings[id] = 0;
+            });
+            processOffline();
+        } catch (e) { resetGame(); }
+    } else { resetGame(); }
+}
+
+function resetGame() {
+    state = {
+        energy: 0, totalEnergy: 0, totalClicks: 0,
+        buildings: {}, epoch: 1, prestigeCount: 0, tokens: 0,
+        questBonus: 0, claimedQuests: [],
+        lastSave: Date.now(), lastTick: Date.now(), stats: { startTime: Date.now() },
+        version: 2
+    };
+    Object.keys(BUILDINGS).forEach(id => state.buildings[id] = 0);
+}
+
+let pendingOffline = 0;
+function processOffline() {
+    const now = Date.now();
+    const offlineSec = Math.min((now - state.lastSave) / 1000, CONFIG.offlineMaxHours * 3600);
+    if (offlineSec > 10) {
+        const income = getTotalPassiveIncome();
+        pendingOffline = income * offlineSec * CONFIG.offlineEfficiency;
+        if (pendingOffline > 0) {
+            document.getElementById('offlineValue').textContent = '+' + formatNumber(pendingOffline) + ' ⚡';
+            document.getElementById('offlineTime').textContent = (offlineSec / 3600).toFixed(1) + ' ' + t('hour');
+            document.getElementById('offlinePopup').classList.add('active');
+        }
+    }
+}
+
+function acceptOffline(double) {
+    const amount = double ? pendingOffline * 2 : pendingOffline;
+    state.energy += amount;
+    state.totalEnergy += amount;
+    pendingOffline = 0;
+    document.getElementById('offlinePopup').classList.remove('active');
+    updateUI();
+    showToast(double ? t('toast_double') : t('toast_income'));
+}
+
+// ─── CLICK HANDLER (ЛКМ + ПКМ) ───
+function handleClick(e) {
+    e.preventDefault();
+    const power = getClickPower();
+    state.energy += power;
+    state.totalEnergy += power;
+    state.totalClicks++;
+    playTickSound();
+    createFloatingNumber(e.clientX || e.pageX, e.clientY || e.pageY, '+' + formatNumber(power));
+    createParticles(e.clientX || e.pageX, e.clientY || e.pageY);
+    const star = document.getElementById('starVisual');
+    star.style.transform = 'scale(0.9)';
+    setTimeout(() => star.style.transform = 'scale(1)', 100);
+    checkQuests();
+    checkEpochProgress();
+    updateUI();
+}
+
+document.getElementById('starContainer').addEventListener('click', handleClick);
+document.getElementById('starContainer').addEventListener('contextmenu', handleClick);
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+function createFloatingNumber(x, y, text) {
+    const el = document.createElement('div');
+    el.className = 'floating-number';
+    el.textContent = text;
+    el.style.left = (x - 20) + 'px';
+    el.style.top = (y - 30) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+}
+
+function createParticles(x, y) {
+    const colors = ['#FFD700', '#FF6B35', '#FF4500', '#FFA500', '#00BFFF'];
+    for (let i = 0; i < 6; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = 4 + Math.random() * 5;
+        p.style.width = size + 'px'; p.style.height = size + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.left = x + 'px'; p.style.top = y + 'px';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 40 + Math.random() * 60;
+        p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
+    }
+}
+
+// ─── BUILDINGS ───
+function buyBuilding(id) {
+    const b = BUILDINGS[id];
+    const level = state.buildings[id] || 0;
+    if (level >= b.maxLevel) return;
+    if (state.epoch < b.epoch) return;
+    const cost = getBuildingCost(id, level);
+    if (state.energy >= cost) {
+        state.energy -= cost;
+        state.buildings[id] = level + 1;
+        showToast('\uD83C\uDFD7\uFE0F ' + tB(id, 0) + ' \u2192 ' + t('level') + '. ' + (level + 1));
+        playUpgradeSound();
+        checkQuests();
+        checkEpochProgress();
+        renderBuildings();
+        updateUI();
+        saveGame();
+    }
+}
+
+function checkEpochProgress() {
+    const epoch = EPOCHS[state.epoch];
+    if (!epoch) return;
+    if (state.energy >= epoch.target && state.epoch < 5) {
+        state.epoch++;
+        const e = EPOCHS[state.epoch];
+        showToast('\uD83D\uDE80 ' + t('epoch_label') + ' ' + state.epoch + ': ' + tE(state.epoch, 0) + ' (' + tE(state.epoch, 1) + ')!');
+        playEpochSound();
+        document.getElementById('starVisual').className = 'star-visual epoch-' + state.epoch;
+        document.getElementById('starName').innerHTML = '<span class="name">' + tE(state.epoch, 1) + '</span><br>' + tE(state.epoch, 2);
+        checkQuests();
+        updateUI();
+        saveGame();
+        tryShowInterstitial();
+    }
+}
+
+// ─── QUESTS ───
+function checkQuests() {
+    QUESTS.forEach(q => {
+        if (!state.claimedQuests.includes(q.id) && q.req(state)) {
+            // Задание выполнено — показываем уведомление, но награду даём только при клике "Получить"
+        }
+    });
+    renderQuests();
+}
+
+function claimQuest(id) {
+    const q = QUESTS.find(x => x.id === id);
+    if (!q || state.claimedQuests.includes(id)) return;
+    if (!q.req(state)) return;
+    state.claimedQuests.push(id);
+    state.questBonus += q.reward;
+    showToast('\uD83C\uDFC6 ' + tQ(q.id, 0) + '! ' + tQ(q.id, 2));
+    renderQuests();
+    updateUI();
+    saveGame();
+}
+
+// ─── PRESTIGE ───
+function calculateTokens() {
+    return Math.floor(Math.sqrt(state.totalEnergy / 1e9));
+}
+
+function doPrestige() {
+    const tokens = calculateTokens();
+    if (tokens <= 0) return;
+    state.tokens += tokens;
+    state.energy = 0;
+    state.totalEnergy = 0;
+    Object.keys(BUILDINGS).forEach(id => state.buildings[id] = 0);
+    state.epoch = 1;
+    state.prestigeCount++;
+    document.getElementById('starVisual').className = 'star-visual epoch-1';
+    const e = EPOCHS[1];
+    document.getElementById('starName').innerHTML = '<span class="name">' + tE(1, 1) + '</span><br>' + tE(1, 2);
+    showToast('\uD83D\uDD04 Prestige! +' + tokens + ' tokens');
+    checkQuests();
+    updateUI();
+    saveGame();
+}
+
+// ─── UI RENDERERS ───
+function renderBuildings() {
+    const container = document.getElementById('buildingsGrid');
+    container.innerHTML = Object.keys(BUILDINGS).map(id => {
+        const b = BUILDINGS[id];
+        const level = state.buildings[id] || 0;
+        const locked = state.epoch < b.epoch;
+        const maxed = level >= b.maxLevel;
+        const cost = locked ? '???' : formatNumber(getBuildingCost(id, level));
+        const inc = level > 0 ? formatNumber(getBuildingIncome(id, level)) + t('per_sec') : '\u2014';
+        const clickB = level > 0 && b.baseClick > 0 ? '+' + formatNumber(getBuildingClickBonus(id, level)) + ' ' + t('to_click') : '';
+        const name = tB(id, 0);
+        return '<div class="building-card ' + (locked ? 'locked' : '') + ' ' + (maxed ? 'maxed' : '') + '" onclick="' + (locked ? '' : 'buyBuilding(\'' + id + '\')') + '"><div class="building-icon">' + b.icon + '</div><div class="building-info"><div class="building-name">' + name + '</div><div class="building-level">' + t('level') + ' ' + level + (maxed ? ' (' + t('max') + ')' : '') + '</div><div class="building-income">' + inc + '</div>' + (clickB ? '<div class="building-click">' + clickB + '</div>' : '') + '</div><div class="building-cost"><div class="cost-value">' + cost + '</div>' + (!locked && !maxed ? '<button class="buy-btn" onclick="event.stopPropagation(); buyBuilding(\'' + id + '\')">' + t('buy') + '</button>' : '') + '</div></div>';
+    }).join('');
+}
+
+function renderQuests() {
+    const container = document.getElementById('questsList');
+    container.innerHTML = QUESTS.map(q => {
+        const completed = q.req(state);
+        const claimed = state.claimedQuests.includes(q.id);
+        const qn = tQ(q.id, 0), qd = tQ(q.id, 1), qr = tQ(q.id, 2);
+        return '<div class="quest-card ' + (claimed ? 'claimed' : (completed ? 'completed' : '')) + '"><div class="quest-icon">' + q.icon + '</div><div class="quest-info"><div class="quest-name">' + qn + '</div><div class="quest-desc">' + qd + '</div><div class="quest-reward">' + t('reward_prefix') + qr + '</div></div>' + (!claimed && completed ? '<button class="quest-btn" onclick="claimQuest(\'' + q.id + '\')">' + t('claim') + '</button>' : (claimed ? '<span style="color:#32CD32;font-size:12px;font-weight:700;">' + t('claimed') + '</span>' : '<span style="color:#666;font-size:11px;">' + t('in_progress') + '</span>')) + '</div>';
+    }).join('');
+}
+
+function renderStats() {
+    const playTime = Math.floor((Date.now() - state.stats.startTime) / 1000);
+    const h = Math.floor(playTime / 3600), m = Math.floor((playTime % 3600) / 60);
+    const stats = [
+        { label: t('stat_playtime'), value: h + t('hour') + ' ' + m + t('min') },
+        { label: t('stat_clicks'), value: formatNumber(state.totalClicks) },
+        { label: t('stat_energy'), value: formatNumber(state.totalEnergy) },
+        { label: t('stat_click_power'), value: formatNumber(getClickPower()) },
+        { label: t('stat_passive'), value: formatNumber(getTotalPassiveIncome()) + t('per_sec') },
+        { label: t('stat_epoch'), value: state.epoch },
+        { label: t('stat_prestiges'), value: state.prestigeCount },
+        { label: t('stat_tokens'), value: formatNumber(state.tokens) },
+        { label: t('stat_quests'), value: state.claimedQuests.length + '/' + QUESTS.length },
+        { label: t('stat_click_bonus'), value: '+' + formatNumber(state.questBonus) }
+    ];
+    document.getElementById('statsGrid').innerHTML = stats.map(s => '<div class="stat-card"><div class="stat-value">' + s.value + '</div><div class="stat-label">' + s.label + '</div></div>').join('');
+}
+
+function renderEpochsMenu() {
+    const container = document.getElementById('epochsMenu');
+    container.innerHTML = Object.keys(EPOCHS).map(key => {
+        const e = EPOCHS[key];
+        const num = parseInt(key);
+        const isCurrent = state.epoch === num;
+        const isLocked = state.epoch < num;
+        const isPast = state.epoch > num;
+        const buildings = Object.keys(BUILDINGS).filter(id => BUILDINGS[id].epoch === num).map(id => BUILDINGS[id].icon + ' ' + tB(id, 0)).join(', ');
+        return '<div class="epoch-card ' + (isCurrent ? 'current' : '') + ' ' + (isLocked ? 'locked' : '') + '"><div class="epoch-card-header"><span class="epoch-card-icon">' + e.starEmoji + '</span><div><div class="epoch-card-title">' + t('epoch_label') + ' ' + num + ': ' + tE(num, 0) + '</div><div class="epoch-card-star">' + tE(num, 1) + ' \u2014 ' + tE(num, 2) + '</div></div></div><div class="epoch-card-req">' + t('requires') + ' ' + formatNumber(e.target) + ' energy</div><div class="epoch-card-buildings">\uD83C\uDFD7\uFE0F ' + buildings + '</div><div class="epoch-card-bonus">' + t('click_bonus') + ' +' + e.clickBonus + '</div>' + (isCurrent ? '<div style="color:#FFD700;font-size:11px;margin-top:6px;font-weight:700;">' + t('current_epoch') + '</div>' : '') + (isPast ? '<div style="color:#32CD32;font-size:11px;margin-top:6px;">' + t('completed') + '</div>' : '') + '</div>';
+    }).join('');
+}
+
+function openEpochsMenu() { renderEpochsMenu(); document.getElementById('epochsPopup').classList.add('active'); }
+function closeEpochsMenu() { document.getElementById('epochsPopup').classList.remove('active'); }
+
+function updateUI() {
+    const income = getTotalPassiveIncome();
+    const clickPower = getClickPower();
+    document.getElementById('res-energy').textContent = formatNumber(state.energy);
+    document.getElementById('inc-energy').textContent = '+' + formatNumber(income) + t('per_sec');
+    document.getElementById('res-click').textContent = '+' + formatNumber(clickPower);
+    document.getElementById('clickPower').textContent = '+' + formatNumber(clickPower) + ' Energy';
+    const e = EPOCHS[state.epoch];
+    document.getElementById('epochBadge').textContent = t('epoch') + ' ' + state.epoch + ': ' + tE(state.epoch, 0);
+
+    // Prestige
+    const tokens = calculateTokens();
+    if (state.epoch >= 5 && tokens > 0) {
+        document.getElementById('prestigeSection').style.display = 'block';
+        document.getElementById('prestigeTokens').textContent = tokens;
+    } else {
+        document.getElementById('prestigeSection').style.display = 'none';
+    }
+}
+
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('active');
+    setTimeout(() => toast.classList.remove('active'), 2500);
+}
+
+// ─── NAVIGATION ───
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'tab-quests') renderQuests();
+        if (btn.dataset.tab === 'tab-stats') renderStats();
+    });
+});
+
+// ─── POPUPS ───
+document.getElementById('offlineClose').addEventListener('click', () => acceptOffline(false));
+document.getElementById('offlineDouble').addEventListener('click', () => {
+    if (ysdkInstance && ysdkInstance.adv) {
+        ysdkInstance.adv.showRewardedVideo({
+            callbacks: {
+                onRewarded: function() { acceptOffline(true); },
+                onClose: function(w) { if (!w) showToast(t('toast_ad_closed')); },
+                onError: function() { showToast(t('toast_ad_unavailable')); acceptOffline(false); }
+            }
+        });
+    } else {
+        showToast(t('toast_ad_unavailable'));
+        acceptOffline(false);
+    }
+});
+document.getElementById('prestigeBtn').addEventListener('click', doPrestige);
+
+// ─── STARS BACKGROUND ───
+const starsContainer = document.getElementById('stars');
+for (let i = 0; i < 120; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.width = (1 + Math.random() * 2.5) + 'px';
+    star.style.height = star.style.width;
+    star.style.animationDelay = Math.random() * 3 + 's';
+    starsContainer.appendChild(star);
+}
+
+// ─── GAME LOOP ───
+function gameLoop() {
+    const now = Date.now();
+    const dt = (now - state.lastTick) / 1000;
+    state.lastTick = now;
+    if (!gamePaused) {
+        const income = getTotalPassiveIncome();
+        state.energy += income * dt;
+        state.totalEnergy += income * dt;
+    }
+    updateUI();
+    requestAnimationFrame(gameLoop);
+}
+
+// ─── YANDEX SDK / SOUND / ADS ───
+let ysdkInstance = null;
+let gamePaused = false;
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { audioCtx = null; } }
+
+function playTickSound() {
+    if (!audioCtx || !soundEnabled) return;
+    try {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.frequency.value = 800 + Math.random() * 400; o.type = 'sine';
+        g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + 0.1);
+    } catch(e) {}
+}
+
+function playUpgradeSound() {
+    if (!audioCtx || !soundEnabled) return;
+    try {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.frequency.setValueAtTime(400, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+        o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + 0.2);
+    } catch(e) {}
+}
+
+function playEpochSound() {
+    if (!audioCtx || !soundEnabled) return;
+    try {
+        [0,0.15,0.3].forEach(function(d) {
+            var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.value = 600 + d * 2000; o.type = 'sine';
+            g.gain.setValueAtTime(0.12, audioCtx.currentTime + d);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d + 0.3);
+            o.start(audioCtx.currentTime + d); o.stop(audioCtx.currentTime + d + 0.3);
+        });
+    } catch(e) {}
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+function pauseGame() { gamePaused = true; try { if (ysdkInstance) ysdkInstance.features.GameplayAPI.stop(); } catch(e) {} if (audioCtx) try { audioCtx.suspend(); } catch(e) {} }
+function resumeGame() { gamePaused = false; try { if (ysdkInstance) ysdkInstance.features.GameplayAPI.start(); } catch(e) {} if (audioCtx) try { audioCtx.resume(); } catch(e) {} }
+
+function tryShowInterstitial() {
+    if (ysdkInstance && ysdkInstance.adv) {
+        ysdkInstance.adv.showFullscreenAdv({ callbacks: { onOpen: function() { pauseGame(); }, onClose: function() { resumeGame(); }, onError: function() {} } });
+    }
+}
+
+function applyUITranslations() {
+    try {
+        var el;
+        document.querySelector('.game-title').textContent = '\u26A1 MARS FRONTIER';
+        document.getElementById('soundToggle').setAttribute('title', t('sound'));
+        document.getElementById('epochBadge').textContent = t('epoch') + ' 1: ' + tE(1, 0);
+        el = document.getElementById('starName'); if (el) el.innerHTML = '<span class="name">' + tE(1, 1) + '</span><br>' + tE(1, 2);
+        document.getElementById('clickHint').textContent = t('click_hint');
+        el = document.querySelector('#tab-game .section-title'); if (el) el.textContent = t('buildings');
+        el = document.querySelector('.prestige-title'); if (el) el.textContent = t('prestige_available');
+        el = document.querySelector('.prestige-desc'); if (el) el.textContent = t('prestige_desc');
+        el = document.getElementById('prestigeTokensLabel'); if (el) el.textContent = t('prestige_tokens');
+        document.getElementById('prestigeBtn').textContent = t('prestige_btn');
+        el = document.querySelector('.auth-section p'); if (el) el.textContent = t('auth_desc');
+        document.getElementById('authBtn').textContent = t('auth_btn');
+        el = document.querySelector('.auth-note'); if (el) el.textContent = t('auth_note');
+        el = document.querySelector('#tab-quests .section-title'); if (el) el.textContent = t('quests');
+        el = document.querySelector('#tab-stats .section-title'); if (el) el.textContent = t('stats');
+        var navBtns = document.querySelectorAll('.nav-btn');
+        if (navBtns[0]) navBtns[0].childNodes[2].textContent = t('game_tab');
+        if (navBtns[1]) navBtns[1].childNodes[2].textContent = t('quests');
+        if (navBtns[2]) navBtns[2].childNodes[2].textContent = t('stats');
+        document.querySelector('.offline-title').textContent = t('offline_title');
+        document.querySelector('.offline-desc').textContent = t('offline_desc');
+        document.getElementById('offlineTimeLabel').textContent = t('offline_time');
+        document.getElementById('offlineDouble').textContent = t('offline_double');
+        document.getElementById('offlineAccept').textContent = t('offline_accept');
+        renderBuildings();
+        renderQuests();
+        renderStats();
+        updateUI();
+    } catch(e) {}
+}
+
+var _gameReadySent = false;
+function signalGameReady() {
+    if (_gameReadySent) return;
+    if (!ysdkInstance) return;
+    _gameReadySent = true;
+    try { ysdkInstance.features.LoadingAPI.ready(); } catch(e) {}
+}
+
+function initYandexSDK() {
+    if (!window.YaGames) { document.getElementById('loadingScreen').classList.add('hidden'); _bootIfNeeded(); return; }
+    YaGames.init().then(function(ysdk) {
+        ysdkInstance = ysdk;
+        try { gameLang = ysdk.environment.i18n.lang || 'ru'; } catch(e) {}
+        applyUITranslations();
+        document.getElementById('loadingScreen').classList.add('hidden');
+        try { initAudio(); } catch(e) {}
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('authBtn').addEventListener('click', function() {
+            ysdk.getPlayer({ scopes: true }).then(function() {
+                showToast(t('toast_auth'));
+                document.getElementById('authSection').style.display = 'none';
+                saveGame();
+            }).catch(function() {});
+        });
+        _bootIfNeeded();
+        signalGameReady();
+    }).catch(function() { document.getElementById('loadingScreen').classList.add('hidden'); _bootIfNeeded(); });
+}
+
+// ─── INIT ───
+function bootGame() {
+    try {
+        initAudio();
+        loadGame();
+        document.getElementById('starVisual').className = 'star-visual epoch-' + state.epoch;
+        var se = state.epoch;
+        document.getElementById('starName').innerHTML = '<span class="name">' + tE(se, 1) + '</span><br>' + tE(se, 2);
+        renderBuildings();
+        updateUI();
+        gameLoop();
+        setInterval(saveGame, CONFIG.saveInterval);
+        document.getElementById('soundToggle').addEventListener('click', toggleSound);
+        signalGameReady();
+    } catch(e) {
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.body.innerHTML = '<div style="padding:20px;color:white;background:#1a1a2e;"><h2>Mars Frontier</h2><p style="color:#ff6b6b;">Ошибка: ' + (e && e.message) + '</p></div>';
+    }
+}
+</script>
+</body>
+</html>
