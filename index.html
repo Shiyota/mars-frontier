@@ -1135,8 +1135,8 @@ function bootGame() {
     }
 }
 
-try { initYandexSDK(); } catch(e) { _bootIfNeeded(); }
 setTimeout(_bootIfNeeded, 3000);
 </script>
+<script async src="/sdk.js" onload="initYandexSDK()" onerror="_bootIfNeeded()"></script>
 </body>
 </html>
