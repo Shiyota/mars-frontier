@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://yandex.com/games/sdk/v2/ysdk.js"></script>
 <style>
 :root {
     --mars-red: #C1440E; --mars-dark: #8B2500; --mars-light: #E85D04;
@@ -1095,43 +1096,26 @@ function signalGameReady() {
 }
 
 function initYandexSDK() {
-    if (!window.YaGames) {
-        var el = document.createElement('script');
-        el.src = 'https://yandex.com/games/sdk/v2/ysdk.js';
-        el.async = true;
-        el.onload = loadSDK;
-        el.onerror = fallback;
-        document.head.appendChild(el);
-        return;
-    }
-    loadSDK();
-    function loadSDK() {
-        if (!window.YaGames) { fallback(); return; }
-        YaGames.init().then(function(ysdk) {
-            ysdkInstance = ysdk;
-            try { gameLang = ysdk.environment.i18n.lang || 'ru'; } catch(e) {}
-            applyUITranslations();
-            hideLoader();
-            try { initAudio(); } catch(e) {}
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('authBtn').addEventListener('click', function() {
-                ysdk.getPlayer({ scopes: true }).then(function() {
-                    showToast(t('toast_auth'));
-                    document.getElementById('authSection').style.display = 'none';
-                    saveGame();
-                }).catch(function() {});
-            });
-            _bootIfNeeded();
-            signalGameReady();
-        }).catch(fallback);
-    }
-    function fallback() {
-        hideLoader();
-        _bootIfNeeded();
-    }
-    function hideLoader() {
+    YaGames.init().then(function(ysdk) {
+        ysdkInstance = ysdk;
+        try { gameLang = ysdk.environment.i18n.lang || 'ru'; } catch(e) {}
+        applyUITranslations();
         document.getElementById('loadingScreen').classList.add('hidden');
-    }
+        try { initAudio(); } catch(e) {}
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('authBtn').addEventListener('click', function() {
+            ysdk.getPlayer({ scopes: true }).then(function() {
+                showToast(t('toast_auth'));
+                document.getElementById('authSection').style.display = 'none';
+                saveGame();
+            }).catch(function() {});
+        });
+        _bootIfNeeded();
+        signalGameReady();
+    }).catch(function() {
+        document.getElementById('loadingScreen').classList.add('hidden');
+        _bootIfNeeded();
+    });
 }
 
 // ─── INIT ───
