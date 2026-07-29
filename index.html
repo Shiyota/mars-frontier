@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+<script src="/sdk.js"></script>
+ 
 <style>
 :root {
     --mars-red: #C1440E; --mars-dark: #8B2500; --mars-light: #E85D04;
@@ -1114,8 +1115,8 @@ function initYandexSDK() {
     }
     p.then(function(ysdk) {
         ysdkInstance = ysdk;
-        signalGameReady();
         document.getElementById('loadingScreen').classList.add('hidden');
+        signalGameReady();
         try { gameLang = ysdk.environment.i18n.lang || 'ru'; } catch(e) {}
         try { applyUITranslations(); } catch(e) {}
         try { initAudio(); } catch(e) {}
