@@ -1680,6 +1680,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
             renderBuildings();
             renderExpeditions();
         }
+        if (btn.dataset.tab === 'tab-expeditions') renderExpeditions();
     });
 });
 
