@@ -1,4 +1,4 @@
-# Mars Frontier: Colony Builder
+# Mars Frontier
 
 Колонизаторный idle-игр с системой эпох, престижей и облаковыми сохранениями.
 

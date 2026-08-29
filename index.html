@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Mars Frontier: Colony Builder</title>
+<title>Mars Frontier</title>
+<!-- Yandex Games metadata -->
+<meta name="genre" content="Казуальные">
+<meta name="keywords" content="Mars Frontier, космос, колонизация, idle, кликер">
+<meta name="description" content="Развивай колонию на Марсе, переходя от звезды к звезде. Начни с Проксимы Центавра и дойди до Сверхзвёздного скопления.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -17,7 +21,7 @@
     --panel-bg: rgba(20, 20, 35, 0.92); --panel-border: rgba(0, 191, 255, 0.3);
     --text-primary: #ffffff; --text-secondary: #a0a0b0;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 body {
     font-family: 'Roboto', sans-serif;
     background: linear-gradient(180deg, #0d0d1a 0%, #1a0a05 40%, #C1440E 100%);
@@ -804,7 +808,8 @@ function checkEpochProgress() {
         checkQuests();
         updateUI();
         saveGame();
-        tryShowInterstitial();
+        // Removed interstitial ads from game actions per Yandex Games requirements
+        // tryShowInterstitial();
     }
 }
 
@@ -959,7 +964,7 @@ document.getElementById('offlineDouble').addEventListener('click', () => {
         ysdkInstance.adv.showRewardedVideo({
             callbacks: {
                 onRewarded: function() { acceptOffline(true); },
-                onClose: function(w) { if (!w) showToast(t('toast_ad_closed')); },
+                onClose: function(w) { if (!w) { showToast(t('toast_ad_closed')); acceptOffline(false); } },
                 onError: function() { showToast(t('toast_ad_unavailable')); acceptOffline(false); }
             }
         });
