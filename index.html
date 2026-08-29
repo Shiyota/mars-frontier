@@ -613,10 +613,10 @@ function tQ(id, i) { var d = I18N.ru.quest[id]; var e = I18N[gameLang] && I18N[g
 // ─── ЭПОХИ И ЗВЁЗДЫ ───
 const EPOCHS = {
     1: { name: 'ПОСАДКА', target: 10000, star: 'Проксима Центавра', starDesc: 'ближайшая звезда к Солнцу', starEmoji: '🔴', clickBonus: 0 },
-    2: { name: 'БАЗА', target: 500000, star: 'Сириус', starDesc: 'самая яркая звезда ночного неба', starEmoji: '🔵', clickBonus: 5 },
-    3: { name: 'ГОРОД', target: 50000000, star: 'Бетельгейзе', starDesc: 'красный сверхгигант', starEmoji: '🔴', clickBonus: 25 },
-    4: { name: 'МЕГАПОЛИС', target: 10000000000, star: 'Ригель', starDesc: 'голубой сверхгигант в Орионе', starEmoji: '🔵', clickBonus: 100 },
-    5: { name: 'ТЕРРАФОРМАЦИЯ', target: 1000000000000, star: 'Солнце', starDesc: 'наша родная звезда', starEmoji: '🟡', clickBonus: 500 }
+    2: { name: 'БАЗА', target: 250000, star: 'Сириус', starDesc: 'самая яркая звезда ночного неба', starEmoji: '🔵', clickBonus: 5 },
+    3: { name: 'ГОРОД', target: 5000000, star: 'Бетельгейзе', starDesc: 'красный сверхгигант', starEmoji: '🔴', clickBonus: 25 },
+    4: { name: 'МЕГАПОЛИС', target: 100000000, star: 'Ригель', starDesc: 'голубой сверхгигант в Орионе', starEmoji: '🔵', clickBonus: 100 },
+    5: { name: 'ТЕРРАФОРМАЦИЯ', target: 2000000000, star: 'Солнце', starDesc: 'наша родная звезда', starEmoji: '🟡', clickBonus: 500 }
 };
 
 // ─── ЗДАНИЯ — АРИФМЕТИЧЕСКАЯ ПРОГРЕССИЯ ───
@@ -676,7 +676,14 @@ const QUESTS = [
     { id: 'q_prestige1', name: 'Престиж', desc: 'Выполни первый престиж', icon: '🔄', req: (s) => s.prestigeCount >= 1, reward: 100, rewardText: '+100 к силе клика' },
     { id: 'q_prestige5', name: 'Бессмертный', desc: 'Выполни 5 престижей', icon: '👑', req: (s) => s.prestigeCount >= 5, reward: 300, rewardText: '+300 к силе клика' },
     { id: 'q_all_buildings', name: 'Коллекционер', desc: 'Купи хотя бы 1 каждого здания', icon: '🏗️', req: (s) => Object.keys(BUILDINGS).every(id => (s.buildings[id]||0) >= 1), reward: 50, rewardText: '+50 к силе клика' },
-    { id: 'q_energy1t', name: 'Легенда Марса', desc: 'Накопи 1 000 000 000 000 энергии', icon: '🏆', req: (s) => s.totalEnergy >= 1000000000000, reward: 500, rewardText: '+500 к силе клика' }
+    { id: 'q_energy1t', name: 'Легенда Марса', desc: 'Накопи 1 000 000 000 000 энергии', icon: '🏆', req: (s) => s.totalEnergy >= 1000000000000, reward: 500, rewardText: '+500 к силе клика' },
+    // New varied quests
+    { id: 'q_science100', name: 'Ученый-новичок', desc: 'Получи 100 научных очков', icon: '🔬', req: (s) => s.sciencePoints >= 100, reward: 5, rewardText: '+5 научных очков/сек' },
+    { id: 'q_science1k', name: 'Ученый-эксперт', desc: 'Получи 1 000 научных очков', icon: '🔬', req: (s) => s.sciencePoints >= 1000, reward: 15, rewardText: '+15 научных очков/сек' },
+    { id: 'q_artifact1', name: 'Артефакт охотник', desc: 'Получи первый артефакт', icon: '💎', req: (s) => Object.values(s.artifactCollection).reduce((a, b) => a + b, 0) >= 1, reward: 10, rewardText: '+10% шанс артефактов' },
+    { id: 'q_artifact5', name: 'Артефакт коллекционер', desc: 'Собери 5 разных артефактов', icon: '💎', req: (s) => Object.keys(s.artifactCollection).length >= 5, reward: 25, rewardText: '+25% шанс артефактов' },
+    { id: 'q_expedition1', name: 'Первая экспедиция', desc: 'Заверши первую экспедицию', icon: '🚀', req: (s) => s.stats.totalExpeditionsCompleted >= 1, reward: 20, rewardText: '+20% скорости экспедиций' },
+    { id: 'q_prestige_quest', name: 'Престижный охотник', desc: 'Выполни 3 престижа', icon: '🔄', req: (s) => s.prestigeCount >= 3, reward: 50, rewardText: '+50 к силе клика' }
 ];
 
 // ─── STATE ───
@@ -852,13 +859,13 @@ function getTotalPassiveIncome() {
 }
 
 function getResearchPointsPerSecond() {
-    let base = 0.1; // base research points per second
+    let base = 0.5; // base research points per second (increased from 0.1)
     // Tech bonuses
-    const researchSpeedBonus = 1 + (state.tech.research_speed.level * 0.02); // +2% per level
-    const dataAnalysisBonus = 1 + (state.tech.data_analysis.level * 0.01); // +1% per level
-    const quantumComputingBonus = 1 + (state.tech.quantum_computing.level * 0.03); // +3% per level
+    const researchSpeedBonus = 1 + (state.tech.research_speed.level * 0.04); // +4% per level (increased from 2%)
+    const dataAnalysisBonus = 1 + (state.tech.data_analysis.level * 0.02); // +2% per level (increased from 1%)
+    const quantumComputingBonus = 1 + (state.tech.quantum_computing.level * 0.06); // +6% per level (increased from 3%)
     // Manager bonuses (online? we'll apply to online generation for now)
-    const researchManagerBonus = 1 + (state.managers.research_manager.level * 0.01); // +1% per level to online generation
+    const researchManagerBonus = 1 + (state.managers.research_manager.level * 0.02); // +2% per level to online generation (increased from 1%)
     // Collection bonuses? maybe later
     return base * researchSpeedBonus * dataAnalysisBonus * quantumComputingBonus * researchManagerBonus;
 }
@@ -876,14 +883,14 @@ function canResearchTech(techKey) {
         }
     }
     // Check if we have enough science points (cost increases with level)
-    const cost = Math.pow(2, tech.level) * 10; // Example cost formula
+    const cost = (tech.level + 1) * 25; // More gradual cost increase
     return state.sciencePoints >= cost;
 }
 
 function researchTech(techKey) {
     if (!canResearchTech(techKey)) return false;
     const tech = state.tech[techKey];
-    const cost = Math.pow(2, tech.level) * 10;
+    const cost = (tech.level + 1) * 25;
     state.sciencePoints -= cost;
     tech.level++;
     // Apply any instant effects? Most are passive, so just update UI/tooltips.
@@ -1436,7 +1443,7 @@ function renderStats() {
         { label: t('stat_prestige_level'), value: state.prestigeLayers[state.prestigeLevel] ? state.prestigeLayers[state.prestigeLevel].name : 'Неизвестно' },
         { label: t('stat_tokens'), value: formatNumber(state.tokens) },
         { label: t('stat_science_points'), value: formatNumber(state.sciencePoints) },
-        { label: t('stat_tech_points'), value: formatNumber(state.techPoints) }, // keeping for backward compatibility
+        { label: t('stat_tech_points'), value: formatNumber(state.techPoints) + ' (не используется)' }, // keeping for backward compatibility
         { label: t('stat_quests'), value: state.claimedQuests.length + '/' + QUESTS.length },
         { label: t('stat_click_bonus'), value: '+' + formatNumber(state.questBonus) },
         { label: t('stat_artifacts'), value: Object.values(state.artifactCollection).reduce((sum, val) => sum + val, 0) },
@@ -1449,6 +1456,26 @@ function renderStats() {
 function renderTech() {
     const container = document.getElementById('techGrid');
     let html = '';
+
+    // Add science points info at the top
+    const sciencePerSecond = getResearchPointsPerSecond();
+    html += `
+        <div style="background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div class="tech-icon">🔬</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 16px;">Научные очки</div>
+                    <div style="font-size: 14px; color: var(--text-secondary);">
+                        Генерируются со скоростью: <span style="color: var(--accent-gold); font-weight: 700;">${formatNumber(sciencePerSecond)}/сек</span>
+                    </div>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Используются для исследования технологий в древовидной системе.<br>
+                Получаете их пассивно со временем и за завершение экспедиций.
+            </div>
+        </div>
+    `;
 
     // Group technologies by branch
     const branches = {};
