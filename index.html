@@ -407,6 +407,8 @@ body { background-attachment: fixed; }
         </div>
         <div class="section-title">🏗️ Здания</div>
         <div class="buildings-grid" id="buildingsGrid"></div>
+        <div class="section-title">🚀 Экспедиции</div>
+        <div class="expeditions-grid" id="expeditionsGrid"></div>
         <div class="prestige-section" id="prestigeSection" style="display:none">
             <div class="prestige-title">🚀 ПРЕСТИЖ ДОСТУПЕН</div>
             <div class="prestige-desc">Сбрось прогресс и получи Токены для перманентных бонусов!</div>
@@ -438,6 +440,7 @@ body { background-attachment: fixed; }
     <button class="nav-btn" data-tab="tab-quests"><span class="nav-icon">📋</span><span class="nav-label">Задания</span></button>
     <button class="nav-btn" data-tab="tab-stats"><span class="nav-icon">📊</span><span class="nav-label">Статистика</span></button>
     <button class="nav-btn" data-tab="tab-tech"><span class="nav-icon">🔬</span><span class="nav-label">Технологии</span></button>
+    <button class="nav-btn" data-tab="tab-expeditions"><span class="nav-icon">🚀</span><span class="nav-label">Экспедиции</span></button>
 </div>
 
 <script>
@@ -895,6 +898,9 @@ function researchTech(techKey) {
     tech.level++;
     // Apply any instant effects? Most are passive, so just update UI/tooltips.
     showToast(`Исследование завершено: ${tech.name} уровень ${tech.level}`);
+    // Update UI elements that might be affected by tech research
+    renderBuildings();
+    updateUI();
     saveGame();
     return true;
 }
@@ -1429,6 +1435,79 @@ function renderQuests() {
     }).join('');
 }
 
+function renderExpeditions() {
+    const container = document.getElementById('expeditionsGrid');
+    container.innerHTML = Object.values(state.expeditions).map(exp => {
+        const canStart = !exp.onCooldown && !state.activeExpedition &&
+                        (!exp.requiresEpoch || state.epoch >= exp.requiresEpoch);
+        const isActive = state.activeExpedition === exp;
+        const isOnCooldown = exp.onCooldown && !isActive;
+
+        let buttonHTML = '';
+        if (isActive) {
+            buttonHTML = '<button class="quest-btn" disabled>В процессе...</button>';
+        } else if (isOnCooldown) {
+            const cooldownLeft = Math.max(0, (exp.cooldownTime - Date.now()) / 1000);
+            buttonHTML = `<button class="quest-btn" disabled>Перезарядка: ${Math.ceil(cooldownLeft)}с</button>`;
+        } else if (!canStart) {
+            buttonHTML = `<button class="quest-btn" disabled>Требуется эпоха ${exp.requiresEpoch}</button>`;
+        } else {
+            buttonHTML = `<button class="quest-btn" onclick="startExpedition('${exp.id}')">Начать</button>`;
+        }
+
+        return `
+            <div class="expedition-card ${isActive ? 'active' : ''} ${isOnCooldown ? 'cooldown' : ''}">
+                <div class="expedition-icon">🚀</div>
+                <div class="expedition-info">
+                    <div class="expedition-name">${exp.name}</div>
+                    <div class="expedition-desc">${exp.duration}s expedition</div>
+                    ${exp.reward.artifacts && exp.reward.artifacts.length > 0 ?
+                        `<div class="expedition-reward">Артефакты: ${exp.reward.artifacts.join(', ')}</div>` : ''}
+                    ${exp.reward.researchPoints ?
+                        `<div class="expedition-reward">Научные очки: ${exp.reward.researchPoints}</div>` : ''}
+                    ${exp.reward.energy ?
+                        `<div class="expedition-reward">Энергия: ${formatNumber(exp.reward.energy)}</div>` : ''}
+                </div>
+                ${buttonHTML}
+            </div>
+        `;
+    }).join('');
+}
+
+function generateRandomEvent() {
+    const events = [
+        { id: 'solar_flare', name: 'Солнечная вспышка', description: 'Увеличивает производство энергии на 50% на 1 минуту.', duration: 60, effect: () => { /* temporary boost */ } },
+        { id: 'meteor_shower', name: 'Метеорный дождь', description: 'Шанс получить редкий артефакт.', duration: 0, effect: () => { if (Math.random() < 0.3) { addArtifact('Бетельгейзеанский кристалл'); } } },
+        { id: 'alien_encounter', name: 'Встреча с инопланетянами', description: 'Выбор: обмен ресурсами или конфликт.', duration: 0, effect: () => { /* present choice */ } }
+        // Add more events
+    ];
+    const event = events[Math.floor(Math.random() * events.length)];
+    // Apply effect immediately or over time
+    if (event.effect) {
+        try {
+            event.effect();
+        } catch(e) {
+            console.error('Event effect error:', e);
+        }
+    }
+    state.activeEvents.push({...event, startTime: Date.now()});
+    state.eventHistory.push({...event, startTime: Date.now()});
+    showToast(`Событие: ${event.name}`);
+}
+
+function updateEvents() {
+    // Check if time for next event
+    if (Date.now() >= state.nextEventTime) {
+        generateRandomEvent();
+        // Schedule next event
+        const nextIn = Math.random() * 3600000 + 1800000; // 30-90 minutes
+        state.nextEventTime = Date.now() + nextIn;
+    }
+    // Remove expired temporary events? We'll keep them in history but not active list for now.
+    // For simplicity, we'll just keep active events as those generated in this session.
+    // We'll clear activeEvents periodically? Let's not for now.
+}
+
 function renderStats() {
     const playTime = Math.floor((Date.now() - state.stats.startTime) / 1000);
     const h = Math.floor(playTime / 3600), m = Math.floor((playTime % 3600) / 60);
@@ -1522,7 +1601,9 @@ function renderTech() {
                             `<div class="tech-requires">Требуется: ${Object.entries(tech.requires).map(([reqKey, reqLevel]) =>
                                 `${state.tech[reqKey]?.name || reqKey} ${reqLevel}`).join(', ')}</div>` : ''}
                         ${!isMaxed ?
-                            `<div class="tech-cost">${Math.pow(2, tech.level) * 10} ${t('stat_science_points')}</div>` : ''}
+                            `<div class="tech-cost">${
+  (tech.level + 1) * 25
+} ${t('stat_science_points')}</div>` : ''}
                     </div>
                 </div>`;
         }
@@ -1572,6 +1653,9 @@ function updateUI() {
     // We could add a technology tab, but for now let's show science points in stats or somewhere
     // For now, we'll just rely on the stats tab to show detailed info
 
+    // Update expeditions
+    renderExpeditions();
+
     // Update stats tab if it's active (we'll rely on renderStats being called when tab changes)
 }
 
@@ -1592,6 +1676,10 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
         if (btn.dataset.tab === 'tab-quests') renderQuests();
         if (btn.dataset.tab === 'tab-stats') renderStats();
         if (btn.dataset.tab === 'tab-tech') renderTech();
+        if (btn.dataset.tab === 'tab-game') {
+            renderBuildings();
+            renderExpeditions();
+        }
     });
 });
 
@@ -1612,6 +1700,8 @@ document.getElementById('offlineDouble').addEventListener('click', () => {
     }
 });
 document.getElementById('prestigeBtn').addEventListener('click', doPrestige);
+
+// Expedition button handlers will be added dynamically in renderExpeditions()
 
 // ─── STARS BACKGROUND ───
 const starsContainer = document.getElementById('stars');
