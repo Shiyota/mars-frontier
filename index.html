@@ -268,6 +268,82 @@ body { background-attachment: fixed; }
     .game-title { font-size: min(3vmin, 24px); }
     .resource-value { font-size: min(3vmin, 24px); }
 }
+/* Technology Tab Styles */
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+.tech-branch {
+    margin-bottom: 24px;
+}
+.tech-branch h3 {
+    color: var(--accent-blue);
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+.tech-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    gap: 12px;
+}
+.tech-card:hover {
+    border-color: var(--accent-gold);
+    transform: translateX(4px);
+}
+.tech-card.available {
+    background: rgba(0, 191, 255, 0.05);
+    border-color: var(--accent-blue);
+}
+.tech-card.maxed {
+    border-color: var(--accent-gold);
+    background: rgba(255,215,0,0.05);
+}
+.tech-card:active {
+    transform: scale(0.98);
+}
+.tech-icon {
+    font-size: 24px;
+    width: 40px;
+    text-align: center;
+}
+.tech-info {
+    flex: 1;
+}
+.tech-name {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+.tech-level {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.tech-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+.tech-requires {
+    font-size: 11px;
+    color: var(--accent-purple);
+    margin-bottom: 8px;
+}
+.tech-cost {
+    font-size: 12px;
+    color: var(--accent-gold);
+    font-weight: 700;
+}
 </style>
 </head>
 <body>
@@ -351,12 +427,17 @@ body { background-attachment: fixed; }
         <div class="section-title">📊 Статистика</div>
         <div class="stats-grid" id="statsGrid"></div>
     </div>
+    <div class="tab-content" id="tab-tech">
+        <div class="section-title">🔬 Технологии</div>
+        <div class="tech-grid" id="techGrid"></div>
+    </div>
 </div>
 
 <div class="bottom-nav">
     <button class="nav-btn active" data-tab="tab-game"><span class="nav-icon">🎮</span><span class="nav-label">Игра</span></button>
     <button class="nav-btn" data-tab="tab-quests"><span class="nav-icon">📋</span><span class="nav-label">Задания</span></button>
     <button class="nav-btn" data-tab="tab-stats"><span class="nav-icon">📊</span><span class="nav-label">Статистика</span></button>
+    <button class="nav-btn" data-tab="tab-tech"><span class="nav-icon">🔬</span><span class="nav-label">Технологии</span></button>
 </div>
 
 <script>
@@ -385,6 +466,7 @@ const CONFIG = {
 const I18N = {
     ru: {
         epoch: 'ЭПОХА', buildings: 'Здания', quests: 'Задания', stats: 'Статистика', game_tab: 'Игра',
+        tech_tab: 'Технологии',
         sound: 'Звук', prestige_available: 'ПРЕСТИЖ ДОСТУПЕН', prestige_desc: 'Сбрось прогресс и получи Токены для перманентных бонусов!',
         prestige_tokens: 'Токенов за сброс:', prestige_btn: 'ВЫПОЛНИТЬ ПРЕСТИЖ',
         auth_desc: 'Сохраняйте прогресс в облаке и играйте на разных устройствах', auth_btn: 'Войти с Яндекс ID',
@@ -400,7 +482,7 @@ const I18N = {
         toast_auth: '✅ Авторизация выполнена',
         stat_playtime: 'Время игры', stat_clicks: 'Всего кликов', stat_energy: 'Всего энергии',
         stat_click_power: 'Сила клика', stat_passive: 'Пассивный доход', stat_epoch: 'Эпоха',
-        stat_prestiges: 'Престижей', stat_tokens: 'Токенов', stat_quests: 'Заданий выполнено', stat_click_bonus: 'Бонус к клику',
+        stat_prestiges: 'Престижей', stat_prestige_level: 'Уровень престижа', stat_tokens: 'Токенов', stat_science_points: 'Научные очки', stat_tech_points: 'Технологические очки', stat_quests: 'Заданий выполнено', stat_click_bonus: 'Бонус к клику', stat_artifacts: 'Артефактов', stat_expeditions: 'Экспедиций', stat_research_points: 'Получено научных очков',
         hour: 'ч', min: 'м',
         building: {
             solar_panel: ['Солнечная панель', '+1 энергии/сек'], battery: ['Аккумулятор', '+5 энергии/сек'],
@@ -453,6 +535,7 @@ const I18N = {
     },
     en: {
         epoch: 'EPOCH', buildings: 'Buildings', quests: 'Quests', stats: 'Stats', game_tab: 'Game',
+        tech_tab: 'Technology',
         sound: 'Sound', prestige_available: 'PRESTIGE AVAILABLE', prestige_desc: 'Reset progress and get Tokens for permanent bonuses!',
         prestige_tokens: 'Tokens on reset:', prestige_btn: 'DO PRESTIGE',
         auth_desc: 'Save progress in the cloud and play on different devices', auth_btn: 'Sign in with Yandex ID',
@@ -468,7 +551,7 @@ const I18N = {
         toast_auth: '✅ Signed in successfully',
         stat_playtime: 'Play time', stat_clicks: 'Total clicks', stat_energy: 'Total energy',
         stat_click_power: 'Click power', stat_passive: 'Passive income', stat_epoch: 'Epoch',
-        stat_prestiges: 'Prestiges', stat_tokens: 'Tokens', stat_quests: 'Quests completed', stat_click_bonus: 'Click bonus',
+        stat_prestiges: 'Prestiges', stat_prestige_level: 'Prestige Level', stat_tokens: 'Tokens', stat_science_points: 'Science Points', stat_tech_points: 'Tech Points', stat_quests: 'Quests completed', stat_click_bonus: 'Click bonus', stat_artifacts: 'Artifacts', stat_expeditions: 'Expeditions', stat_research_points: 'Research Points Earned',
         hour: 'h', min: 'm',
         building: {
             solar_panel: ['Solar Panel', '+1 energy/sec'], battery: ['Battery', '+5 energy/sec'],
@@ -602,7 +685,117 @@ var state = {
     buildings: {}, epoch: 1, prestigeCount: 0, tokens: 0,
     questBonus: 0, claimedQuests: [],
     lastSave: Date.now(), lastTick: Date.now(), stats: { startTime: Date.now() },
-    version: 2
+    version: 2,
+
+    // Technology Tree
+    sciencePoints: 0,
+    techPoints: 0, // Kept for backward compatibility? We'll use sciencePoints as the main currency.
+    tech: {
+        // Energy branch
+        energy_efficiency: { level: 0, maxLevel: 10, name: "Энергоэффективность", description: "+5% к пассивному доходу за уровень", branch: "energy", icon: "⚡" },
+        solar_advancement: { level: 0, maxLevel: 5, name: "Продвинутая солнечная энергетика", description: "Солнечные панели производят на 10% больше энергии за уровень", branch: "energy", icon: "☀️", requires: { energy_efficiency: 3 } },
+        fusion_research: { level: 0, maxLevel: 3, name: "Исследования термоядерного синтеза", description: "Разблокирует термоядерные реакторы на 20% раньше", branch: "energy", icon: "🔬", requires: { solar_advancement: 2 } },
+
+        // Biotechnology branch
+        bio_research: { level: 0, maxLevel: 8, name: "Биотехнологические исследования", description: "+3% к производству еды и воды за уровень", branch: "bio", icon: "🧬" },
+        hydroponics_advanced: { level: 0, maxLevel: 4, name: "Продвинутая гидропоника", description: "Гидропоника производит на 15% больше за уровень", branch: "bio", icon: "🌱", requires: { bio_research: 4 } },
+        terraforming_bio: { level: 0, maxLevel: 3, name: "Биологическая терраформация", description: "Увеличивает эффективность терраформаторов на 12% за уровень", branch: "bio", icon: "🌍", requires: { hydroponics_advanced: 2 } },
+
+        // Engineering branch
+        engineering: { level: 0, maxLevel: 6, name: "Инженерное дело", description: "+4% к скорости строительства за уровень", branch: "engineering", icon: "⚙️" },
+        construction_drones: { level: 0, maxLevel: 3, name: "Строительные дроны", description: "Снижает стоимость зданий на 5% за уровень", branch: "engineering", icon: "🤖", requires: { engineering: 3 } },
+        megastructures: { level: 0, maxLevel: 2, name: "Мегаструктуры", description: "Разблокирует специальные мегаструктурные здания", branch: "engineering", icon: "🏗️", requires: { construction_drones: 2 } },
+
+        // Research branch
+        research_speed: { level: 0, maxLevel: 5, name: "Скорость исследований", description: "+6% к скорости получения научных очков за уровень", branch: "research", icon: "📚" },
+        data_analysis: { level: 0, maxLevel: 4, name: "Анализ данных", description: "Увеличивает награды от исследовательских миссий на 8% за уровень", branch: "research", icon: "📊", requires: { research_speed: 2 } },
+        quantum_computing: { level: 0, maxLevel: 3, name: "Квантовые вычисления", description: "Разблокирует квантовые исследования для ускоренного прогресса", branch: "research", icon: "⚛️", requires: { data_analysis: 3 } },
+
+        // Economics branch
+        trade_skills: { level: 0, maxLevel: 4, name: "Навыки торговли", description: "+5% к эффективности торговли за уровень", branch: "economics", icon: "💱" },
+        market_analysis: { level: 0, maxLevel: 3, name: "Анализ рынка", description: "Увеличивает прибыль от торговых миссий на 10% за уровень", branch: "economics", icon: "📈", requires: { trade_skills: 2 } },
+        interstellar_banking: { level: 0, maxLevel: 2, name: "Межзвездное банковское дело", description: "Увеличивает лимит хранения ресурсов на 15% за уровень", branch: "economics", icon: "🏦", requires: { market_analysis: 2 } }
+    },
+
+    // Research/Expedition System
+    researchPoints: 0,
+    expeditions: {
+        // Available expeditions
+        proxima_survey: { id: "proxima_survey", name: "Исследование Проксимы", duration: 300, reward: { researchPoints: 50, energy: 1000 }, completed: false, onCooldown: false, cooldownTime: 0 },
+        sirius_exploration: { id: "sirius_exploration", name: "Исследование Сириуса", duration: 1800, reward: { researchPoints: 200, energy: 10000 }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 2 },
+        betelgeuse_mission: { id: "betelgeuse_mission", name: "Миссия к Бетельгейзе", duration: 7200, reward: { researchPoints: 800, energy: 50000, artifacts: ["Бетельгейзеанский кристалл"] }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 3 },
+        rigel_expedition: { id: "rigel_expedition", name: "Экспедиция к Ригелю", duration: 28800, reward: { researchPoints: 3200, energy: 200000, artifacts: ["Ригельевый сплав"] }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 4 },
+        sol_initiative: { id: "sol_initiative", name: "Инициатива 'Солнце'", duration: 86400, reward: { researchPoints: 12800, energy: 1000000, artifacts: ["Солнечное ядро"] }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 5 }
+    },
+    activeExpedition: null,
+    expeditionStartTime: 0,
+
+    // Artifacts/Collections
+    artifacts: {
+        "Бетельгейзеанский кристалл": { name: "Бетельгейзеанский кристалл", description: "Редкий кристалл из атмосферы Бетельгейзе", rarity: "rare", icon: "💎", collection: "stellar_minerals" },
+        "Ригельевый сплав": { name: "Ригельевый сплав", description: "Прочный сплав, созданный в недрах Ригеля", rarity: "epic", icon: "⚔️", collection: "stellar_minerals" },
+        "Солнечное ядро": { name: "Солнечное ядро", description: "Конденсированная энергия из ядра Солнца", rarity: "legendary", icon: "☀️", collection: "stellar_minerals" },
+        "Марсианский окаменелость": { name: "Марсианская окаменелость", description: "Древняя окаменелость, найденная под поверхностью Марса", rarity: "common", icon: "🦴", collection: "fossils" },
+        "Марсианский лед": { name: "Лед с Марса", description: "Очищенный лед с полярных шапок Марса", rarity: "uncommon", icon: "❄️", collection: "resources" },
+        "Марсианская пыль": { name: "Пыль с Марса", description: "Особая красная пыль с уникальными свойствами", rarity: "common", icon: "🌫️", collection: "resources" }
+    },
+    artifactCollection: {}, // artifactId: count
+
+    // Collections bonuses
+    collectionBonuses: {
+        stellar_minerals: {
+            name: "Космические минералы",
+            description: "Соберите все космические минералы",
+            required: ["Бетельгейзеанский кристалл", "Ригельевый сплав", "Солнечное ядро"],
+            bonus: { researchPoints: 0.15 }, // +15% research points
+            completed: false
+        },
+        fossils: {
+            name: "Ископаемые находки",
+            description: "Соберите все ископаемые находки",
+            required: ["Марсианский окаменелость"],
+            bonus: { energy: 0.10 }, // +10% energy production
+            completed: false
+        },
+        resources: {
+            name: "Ресурсы Марса",
+            description: "Соберите все базовые ресурсы Марса",
+            required: ["Марсианский лед", "Марсианская пыль"],
+            bonus: { tokens: 0.05 }, // +5% prestige tokens
+            completed: false
+        }
+    },
+
+    // Events System
+    activeEvents: [],
+    eventHistory: [],
+    nextEventTime: Date.now() + (Math.random() * 3600000) + 1800000, // First event in 30-90 minutes
+
+    // Prestige Layers
+    prestigeLevel: 0, // 0 = regular, 1 = galactic, 2 = universal
+    prestigeLayers: [
+        { name: "Обычный престиж", requirement: 1, rewardMultiplier: 1, unlockAt: 0 },
+        { name: "Галактический престиж", requirement: 5, rewardMultiplier: 2, unlockAt: 1 }, // After 5 regular prestiges
+        { name: "Универсальный престиж", requirement: 20, rewardMultiplier: 3, unlockAt: 2 } // After 20 galactic prestiges (or 100 regular?)
+    ],
+
+    // Offline Managers (for enhanced offline progress)
+    managers: {
+        energy_manager: { level: 0, maxLevel: 10, name: "Менеджер энергии", description: "+2% к оффлайн доходу энергии за уровень", costBase: 1000, costMult: 1.5 },
+        research_manager: { level: 0, maxLevel: 8, name: "Менеджер исследований", description: "+3% к оффлайн research points за уровень", costBase: 5000, costMult: 1.6 },
+        expedition_manager: { level: 0, maxLevel: 5, name: "Менеджер экспедиций", description: "Снижает время подготовки экспедиций на 4% за уровень", costBase: 15000, costMult: 1.8 }
+    },
+
+    // Leaderboards/Stats (local first, could be expanded to online later)
+    stats: {
+        startTime: Date.now(),
+        totalPrestigeLayers: 0,
+        maxEpochReached: 1,
+        totalArtifactsCollected: 0,
+        totalExpeditionsCompleted: 0,
+        totalResearchPointsEarned: 0,
+        bestOfflineEarnings: 0
+    }
 };
 
 function formatNumber(num) {
@@ -637,8 +830,235 @@ function getTotalPassiveIncome() {
             income += getBuildingIncome(id, level);
         }
     });
+
+    // Apply technology bonuses
+    const energyEfficiencyBonus = 1 + (state.tech.energy_efficiency.level * 0.05); // +5% per level
+    const solarAdvancementBonus = 1 + (state.tech.solar_advancement.level * 0.10); // +10% per level
+    const terraformingBioBonus = 1 + (state.tech.terraforming_bio.level * 0.12); // +12% per level
+    const fossilsCollectionBonus = 1 + (getCollectionBonus('fossils') || 0); // +10% if collection complete
+    const resourcesCollectionBonus = 1 + (getCollectionBonus('resources') || 0); // +5% if collection complete
+
+    income *= energyEfficiencyBonus;
+    income *= solarAdvancementBonus;
+    income *= terraformingBioBonus;
+    income *= fossilsCollectionBonus;
+    income *= resourcesCollectionBonus;
+
+    // Apply manager bonuses (offline managers affect passive income)
+    const energyManagerBonus = 1 + (state.managers.energy_manager.level * 0.02); // +2% per level
+    income *= energyManagerBonus;
+
     return income;
 }
+
+function getResearchPointsPerSecond() {
+    let base = 0.1; // base research points per second
+    // Tech bonuses
+    const researchSpeedBonus = 1 + (state.tech.research_speed.level * 0.02); // +2% per level
+    const dataAnalysisBonus = 1 + (state.tech.data_analysis.level * 0.01); // +1% per level
+    const quantumComputingBonus = 1 + (state.tech.quantum_computing.level * 0.03); // +3% per level
+    // Manager bonuses (online? we'll apply to online generation for now)
+    const researchManagerBonus = 1 + (state.managers.research_manager.level * 0.01); // +1% per level to online generation
+    // Collection bonuses? maybe later
+    return base * researchSpeedBonus * dataAnalysisBonus * quantumComputingBonus * researchManagerBonus;
+}
+
+function canResearchTech(techKey) {
+    if (!state.tech[techKey]) return false;
+    const tech = state.tech[techKey];
+    if (tech.level >= tech.maxLevel) return false;
+    // Check requirements
+    if (tech.requires) {
+        for (const [reqKey, reqLevel] of Object.entries(tech.requires)) {
+            if (!state.tech[reqKey] || state.tech[reqKey].level < reqLevel) {
+                return false;
+            }
+        }
+    }
+    // Check if we have enough science points (cost increases with level)
+    const cost = Math.pow(2, tech.level) * 10; // Example cost formula
+    return state.sciencePoints >= cost;
+}
+
+function researchTech(techKey) {
+    if (!canResearchTech(techKey)) return false;
+    const tech = state.tech[techKey];
+    const cost = Math.pow(2, tech.level) * 10;
+    state.sciencePoints -= cost;
+    tech.level++;
+    // Apply any instant effects? Most are passive, so just update UI/tooltips.
+    showToast(`Исследование завершено: ${tech.name} уровень ${tech.level}`);
+    saveGame();
+    return true;
+}
+
+function getCollectionBonus(collectionName) {
+    const collection = state.collectionBonuses[collectionName];
+    if (!collection) return 0;
+    // Check if all required artifacts are present at least once
+    for (const artifactName of collection.required) {
+        if (!state.artifactCollection[artifactName] || state.artifactCollection[artifactName] < 1) {
+            return 0;
+        }
+    }
+    // Collection is complete
+    collection.completed = true;
+    // Return the bonus value (assuming it's a multiplier like 0.15 for 15%)
+    // We'll assume the bonus object has a numeric value for the first key
+    const bonusKey = Object.keys(collection.bonus)[0];
+    return collection.bonus[bonusKey];
+}
+
+function updateArtifactCollection() {
+    // Update collection completion status
+    for (const [key, collection] of Object.entries(state.collectionBonuses)) {
+        let complete = true;
+        for (const artifactName of collection.required) {
+            if (!state.artifactCollection[artifactName] || state.artifactCollection[artifactName] < 1) {
+                complete = false;
+                break;
+            }
+        }
+        collection.completed = complete;
+    }
+}
+
+function addArtifact(artifactName) {
+    const artifact = state.artifacts[artifactName];
+    if (!artifact) return false;
+    state.artifactCollection[artifactName] = (state.artifactCollection[artifactName] || 0) + 1;
+    updateArtifactCollection();
+    // Check for new achievements/quests? Could tie into quest system.
+    showToast(`Артефакт получен: ${artifact.name}`);
+    saveGame();
+    return true;
+}
+
+function startExpedition(expeditionId) {
+    const expedition = state.expeditions[expeditionId];
+    if (!expedition) return false;
+    // Check epoch requirement
+    if (expedition.requiresEpoch && state.epoch < expedition.requiresEpoch) {
+        showToast(`Требуется эпоха ${expedition.requiresEpoch} или выше`);
+        return false;
+    }
+    // Check if already on cooldown
+    if (expedition.onCooldown) {
+        showToast(`Экспедиция на перезарядке`);
+        return false;
+    }
+    // Check if already active
+    if (state.activeExpedition) {
+        showToast(`Уже есть активная экспедиция`);
+        return false;
+    }
+    // Apply expedition manager bonus to reduce time? We'll apply to preparation time? Let's just use base duration for now.
+    state.activeExpedition = expedition;
+    state.expeditionStartTime = Date.now();
+    expedition.onCooldown = true; // Mark as on cooldown during expedition
+    // Update UI
+    showToast(`Экспедиция начата: ${expedition.name}`);
+    return true;
+}
+
+function updateExpeditions() {
+    if (!state.activeExpedition) return;
+    const now = Date.now();
+    const elapsed = (now - state.expeditionStartTime) / 1000; // seconds
+    if (elapsed >= state.activeExpedition.duration) {
+        // Expedition completed
+        grantExpeditionRewards(state.activeExpedition);
+        state.activeExpedition.completed = true;
+        // Set cooldown (e.g., 2x duration)
+        state.activeExpedition.cooldownTime = now + (state.activeExpedition.duration * 2 * 1000);
+        state.activeExpedition = null;
+        state.expeditionStartTime = 0;
+        // Update stats
+        state.stats.totalExpeditionsCompleted++;
+        saveGame();
+    }
+}
+
+function grantExpeditionRewards(expedition) {
+    // Grant rewards
+    if (expedition.reward.researchPoints) {
+        state.sciencePoints += expedition.reward.researchPoints;
+        state.stats.totalResearchPointsEarned += expedition.reward.researchPoints;
+    }
+    if (expedition.reward.energy) {
+        state.energy += expedition.reward.energy;
+        state.totalEnergy += expedition.reward.energy;
+    }
+    // Grant artifacts
+    if (expedition.reward.artifacts) {
+        for (const artifactName of expedition.reward.artifacts) {
+            addArtifact(artifactName);
+        }
+    }
+    showToast(`Экспедиция завершена! Награды получены.`);
+}
+
+function updatePrestigeLayers() {
+    // Determine highest prestige layer unlocked based on prestigeCount
+    let newLevel = 0;
+    for (let i = state.prestigeLayers.length - 1; i >= 0; i--) {
+        const layer = state.prestigeLayers[i];
+        if (state.prestigeCount >= layer.requirement) {
+            newLevel = i;
+            break;
+        }
+    }
+    if (newLevel !== state.prestigeLevel) {
+        state.prestigeLevel = newLevel;
+        // Update prestige button text or UI
+        showToast(`Достигнут новый уровень престижа: ${state.prestigeLayers[state.prestigeLevel].name}`);
+    }
+}
+
+// Event system (simplified)
+function generateRandomEvent() {
+    const events = [
+        { id: 'solar_flare', name: 'Солнечная вспышка', description: 'Увеличивает производство энергии на 50% на 1 минуту.', duration: 60, effect: () => { /* temporary boost */ } },
+        { id: 'meteor_shower', name: 'Метеорный дождь', description: 'Шанс получить редкий артефакт.', duration: 0, effect: () => { if (Math.random() < 0.3) { addArtifact('Бетельгейзеанский кристалл'); } } },
+        { id: 'alien_encounter', name: 'Встреча с инопланетянами', description: 'Выбор: обмен ресурсами или конфликт.', duration: 0, effect: () => { /* present choice */ } }
+        // Add more events
+    ];
+    const event = events[Math.floor(Math.random() * events.length)];
+    // Apply effect immediately or over time
+    if (event.effect) {
+        try {
+            event.effect();
+        } catch(e) {
+            console.error('Event effect error:', e);
+        }
+    }
+    state.activeEvents.push({...event, startTime: Date.now()});
+    state.eventHistory.push({...event, startTime: Date.now()});
+    showToast(`Событие: ${event.name}`);
+}
+
+function updateEvents() {
+    // Check if time for next event
+    if (Date.now() >= state.nextEventTime) {
+        generateRandomEvent();
+        // Schedule next event
+        const nextIn = Math.random() * 3600000 + 1800000; // 30-90 minutes
+        state.nextEventTime = Date.now() + nextIn;
+    }
+    // Remove expired temporary events? We'll keep them in history but not active list for now.
+    // For simplicity, we'll just keep active events as those generated in this session.
+    // We'll clear activeEvents periodically? Let's not for now.
+}
+
+// Update stats
+function updateStats() {
+    state.stats.maxEpochReached = Math.max(state.stats.maxEpochReached, state.epoch);
+    state.stats.totalPrestigeLayers = state.prestigeLevel; // or count of completed layers?
+    state.stats.totalArtifactsCollected = Object.values(state.artifactCollection).reduce((sum, val) => sum + val, 0);
+    // bestOfflineEarnings could be updated when accepting offline
+}
+
+// We'll need to call these functions in the game loop and update UI accordingly.
 
 function getTotalClickBonus() {
     let bonus = state.questBonus;
@@ -650,6 +1070,15 @@ function getTotalClickBonus() {
             bonus += getBuildingClickBonus(id, level);
         }
     });
+
+    // Apply technology bonuses to click power
+    const engineeringBonus = 1 + (state.tech.engineering.level * 0.04); // +4% per level to building speed, but we apply to click as a general bonus? Let's assume engineering also helps clicking.
+    // Actually, engineering is for construction speed. We'll leave click bonus from tech to be added later if needed.
+    // For now, we'll not modify click bonus from technology, but we can add a separate technology that does.
+
+    // We'll add a bonus from the research branch for click power? Not in the current design.
+    // Let's leave the click bonus as is and add technology-based click bonuses in the tech tree if we want.
+
     return bonus;
 }
 
@@ -695,7 +1124,116 @@ function resetGame() {
         buildings: {}, epoch: 1, prestigeCount: 0, tokens: 0,
         questBonus: 0, claimedQuests: [],
         lastSave: Date.now(), lastTick: Date.now(), stats: { startTime: Date.now() },
-        version: 2
+        version: 2,
+
+        // Technology Tree
+        techPoints: 0,
+        tech: {
+            // Energy branch
+            energy_efficiency: { level: 0, maxLevel: 10, name: "Энергоэффективность", description: "+5% к пассивному доходу за уровень", branch: "energy", icon: "⚡" },
+            solar_advancement: { level: 0, maxLevel: 5, name: "Продвинутая солнечная энергетика", description: "Солнечные панели производят на 10% больше энергии за уровень", branch: "energy", icon: "☀️", requires: { energy_efficiency: 3 } },
+            fusion_research: { level: 0, maxLevel: 3, name: "Исследования термоядерного синтеза", description: "Разблокирует термоядерные реакторы на 20% раньше", branch: "energy", icon: "🔬", requires: { solar_advancement: 2 } },
+
+            // Biotechnology branch
+            bio_research: { level: 0, maxLevel: 8, name: "Биотехнологические исследования", description: "+3% к производству еды и воды за уровень", branch: "bio", icon: "🧬" },
+            hydroponics_advanced: { level: 0, maxLevel: 4, name: "Продвинутая гидропоника", description: "Гидропоника производит на 15% больше за уровень", branch: "bio", icon: "🌱", requires: { bio_research: 4 } },
+            terraforming_bio: { level: 0, maxLevel: 3, name: "Биологическая терраформация", description: "Увеличивает эффективность терраформаторов на 12% за уровень", branch: "bio", icon: "🌍", requires: { hydroponics_advanced: 2 } },
+
+            // Engineering branch
+            engineering: { level: 0, maxLevel: 6, name: "Инженерное дело", description: "+4% к скорости строительства за уровень", branch: "engineering", icon: "⚙️" },
+            construction_drones: { level: 0, maxLevel: 3, name: "Строительные дроны", description: "Снижает стоимость зданий на 5% за уровень", branch: "engineering", icon: "🤖", requires: { engineering: 3 } },
+            megastructures: { level: 0, maxLevel: 2, name: "Мегаструктуры", description: "Разблокирует специальные мегаструктурные здания", branch: "engineering", icon: "🏗️", requires: { construction_drones: 2 } },
+
+            // Research branch
+            research_speed: { level: 0, maxLevel: 5, name: "Скорость исследований", description: "+6% к скорости получения научных очков за уровень", branch: "research", icon: "📚" },
+            data_analysis: { level: 0, maxLevel: 4, name: "Анализ данных", description: "Увеличивает награды от исследовательских миссий на 8% за уровень", branch: "research", icon: "📊", requires: { research_speed: 2 } },
+            quantum_computing: { level: 0, maxLevel: 3, name: "Квантовые вычисления", description: "Разблокирует квантовые исследования для ускоренного прогресса", branch: "research", icon: "⚛️", requires: { data_analysis: 3 } },
+
+            // Economics branch
+            trade_skills: { level: 0, maxLevel: 4, name: "Навыки торговли", description: "+5% к эффективности торговли за уровень", branch: "economics", icon: "💱" },
+            market_analysis: { level: 0, maxLevel: 3, name: "Анализ рынка", description: "Увеличивает прибыль от торговых миссий на 10% за уровень", branch: "economics", icon: "📈", requires: { trade_skills: 2 } },
+            interstellar_banking: { level: 0, maxLevel: 2, name: "Межзвездное банковское дело", description: "Увеличивает лимит хранения ресурсов на 15% за уровень", branch: "economics", icon: "🏦", requires: { market_analysis: 2 } }
+        },
+
+        // Research/Expedition System
+        researchPoints: 0,
+        expeditions: {
+            // Available expeditions
+            proxima_survey: { id: "proxima_survey", name: "Исследование Проксимы", duration: 300, reward: { researchPoints: 50, energy: 1000 }, completed: false, onCooldown: false, cooldownTime: 0 },
+            sirius_exploration: { id: "sirius_exploration", name: "Исследование Сириуса", duration: 1800, reward: { researchPoints: 200, energy: 10000 }, completed: false, onCooldown: false, cooldownTime: 0 },
+            betelgeuse_mission: { id: "betelgeuse_mission", name: "Миссия к Бетельгейзе", duration: 7200, reward: { researchPoints: 800, energy: 50000, artifacts: ["Бетельгейзеанский кристалл"] }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 3 },
+            rigel_expedition: { id: "rigel_expedition", name: "Экспедиция к Ригелю", duration: 28800, reward: { researchPoints: 3200, energy: 200000, artifacts: ["Ригельевый сплав"] }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 4 },
+            sol_initiative: { id: "sol_initiative", name: "Инициатива 'Солнце'", duration: 86400, reward: { researchPoints: 12800, energy: 1000000, artifacts: ["Солнечное ядро"] }, completed: false, onCooldown: false, cooldownTime: 0, requiresEpoch: 5 }
+        },
+        activeExpedition: null,
+        expeditionStartTime: 0,
+
+        // Artifacts/Collections
+        artifacts: {
+            "Бетельгейзеанский кристалл": { name: "Бетельгейзеанский кристалл", description: "Редкий кристалл из атмосферы Бетельгейзе", rarity: "rare", icon: "💎", collection: "stellar_minerals" },
+            "Ригельевый сплав": { name: "Ригельевый сплав", description: "Прочный сплав, созданный в недрах Ригеля", rarity: "epic", icon: "⚔️", collection: "stellar_minerals" },
+            "Солнечное ядро": { name: "Солнечное ядро", description: "Конденсированная энергия из ядра Солнца", rarity: "legendary", icon: "☀️", collection: "stellar_minerals" },
+            "Марсианский окаменелость": { name: "Марсианская окаменелость", description: "Древняя окаменелость, найденная под поверхностью Марса", rarity: "common", icon: "🦴", collection: "fossils" },
+            "Марсианский лед": { name: "Лед с Марса", description: "Очищенный лед с полярных шапок Марса", rarity: "uncommon", icon: "❄️", collection: "resources" },
+            "Марсианская пыль": { name: "Пыль с Марса", description: "Особая красная пыль с уникальными свойствами", rarity: "common", icon: "🌫️", collection: "resources" }
+        },
+        artifactCollection: {}, // artifactId: count
+
+        // Collections bonuses
+        collectionBonuses: {
+            stellar_minerals: {
+                name: "Космические минералы",
+                description: "Соберите все космические минералы",
+                required: ["Бетельгейзеанский кристалл", "Ригельевый сплав", "Солнечное ядро"],
+                bonus: { researchPoints: 0.15 }, // +15% research points
+                completed: false
+            },
+            fossils: {
+                name: "Ископаемые находки",
+                description: "Соберите все ископаемые находки",
+                required: ["Марсианский окаменелость"],
+                bonus: { energy: 0.10 }, // +10% energy production
+                completed: false
+            },
+            resources: {
+                name: "Ресурсы Марса",
+                description: "Соберите все базовые ресурсы Марса",
+                required: ["Марсианский лед", "Марсианская пыль"],
+                bonus: { tokens: 0.05 }, // +5% prestige tokens
+                completed: false
+            }
+        },
+
+        // Events System
+        activeEvents: [],
+        eventHistory: [],
+        nextEventTime: Date.now() + (Math.random() * 3600000) + 1800000, // First event in 30-90 minutes
+
+        // Prestige Layers
+        prestigeLevel: 0, // 0 = regular, 1 = galactic, 2 = universal
+        prestigeLayers: [
+            { name: "Обычный престиж", requirement: 1, rewardMultiplier: 1, unlockAt: 0 },
+            { name: "Галактический престиж", requirement: 5, rewardMultiplier: 2, unlockAt: 1 }, // After 5 regular prestiges
+            { name: "Универсальный престиж", requirement: 20, rewardMultiplier: 3, unlockAt: 2 } // After 20 galactic prestiges (or 100 regular?)
+        ],
+
+        // Offline Managers (for enhanced offline progress)
+        managers: {
+            energy_manager: { level: 0, maxLevel: 10, name: "Менеджер энергии", description: "+2% к оффлайн доходу энергии за уровень", costBase: 1000, costMult: 1.5 },
+            research_manager: { level: 0, maxLevel: 8, name: "Менеджер исследований", description: "+3% к оффлайн research points за уровень", costBase: 5000, costMult: 1.6 },
+            expedition_manager: { level: 0, maxLevel: 5, name: "Менеджер экспедиций", description: "Снижает время подготовки экспедиций на 4% за уровень", costBase: 15000, costMult: 1.8 }
+        },
+
+        // Leaderboards/Stats (local first, could be expanded to online later)
+        stats: {
+            startTime: Date.now(),
+            totalPrestigeLayers: 0,
+            maxEpochReached: 1,
+            totalArtifactsCollected: 0,
+            totalExpeditionsCompleted: 0,
+            totalResearchPointsEarned: 0,
+            bestOfflineEarnings: 0
+        }
     };
     Object.keys(BUILDINGS).forEach(id => state.buildings[id] = 0);
 }
@@ -895,11 +1433,77 @@ function renderStats() {
         { label: t('stat_passive'), value: formatNumber(getTotalPassiveIncome()) + t('per_sec') },
         { label: t('stat_epoch'), value: state.epoch },
         { label: t('stat_prestiges'), value: state.prestigeCount },
+        { label: t('stat_prestige_level'), value: state.prestigeLayers[state.prestigeLevel] ? state.prestigeLayers[state.prestigeLevel].name : 'Неизвестно' },
         { label: t('stat_tokens'), value: formatNumber(state.tokens) },
+        { label: t('stat_science_points'), value: formatNumber(state.sciencePoints) },
+        { label: t('stat_tech_points'), value: formatNumber(state.techPoints) }, // keeping for backward compatibility
         { label: t('stat_quests'), value: state.claimedQuests.length + '/' + QUESTS.length },
-        { label: t('stat_click_bonus'), value: '+' + formatNumber(state.questBonus) }
+        { label: t('stat_click_bonus'), value: '+' + formatNumber(state.questBonus) },
+        { label: t('stat_artifacts'), value: Object.values(state.artifactCollection).reduce((sum, val) => sum + val, 0) },
+        { label: t('stat_expeditions'), value: state.stats.totalExpeditionsCompleted },
+        { label: t('stat_research_points'), value: formatNumber(state.stats.totalResearchPointsEarned) }
     ];
     document.getElementById('statsGrid').innerHTML = stats.map(s => '<div class="stat-card"><div class="stat-value">' + s.value + '</div><div class="stat-label">' + s.label + '</div></div>').join('');
+}
+
+function renderTech() {
+    const container = document.getElementById('techGrid');
+    let html = '';
+
+    // Group technologies by branch
+    const branches = {};
+    for (const [key, tech] of Object.entries(state.tech)) {
+        if (!branches[tech.branch]) {
+            branches[tech.branch] = [];
+        }
+        branches[tech.branch].push({ id: key, ...tech });
+    }
+
+    // Branch names for display
+    const branchNames = {
+        energy: 'Энергетика',
+        bio: 'Биотехнологии',
+        engineering: 'Инженерия',
+        research: 'Исследования',
+        economics: 'Экономика'
+    };
+
+    const branchIcons = {
+        energy: '⚡',
+        bio: '🧬',
+        engineering: '⚙️',
+        research: '📚',
+        economics: '💱'
+    };
+
+    for (const [branch, techs] of Object.entries(branches)) {
+        html += `<div class="tech-branch"><h3>${branchIcons[branch]} ${branchNames[branch]}</h3>`;
+
+        for (const tech of techs) {
+            const canAfford = canResearchTech(tech.id);
+            const isMaxed = tech.level >= tech.maxLevel;
+
+            html += `
+                <div class="tech-card ${canAfford && !isMaxed ? 'available' : ''} ${isMaxed ? 'maxed' : ''}"
+                     onclick="canResearchTech('${tech.id}') && !isMaxed ? researchTech('${tech.id}') : null">
+                    <div class="tech-icon">${tech.icon}</div>
+                    <div class="tech-info">
+                        <div class="tech-name">${tech.name}</div>
+                        <div class="tech-level">${t('level')} ${tech.level}/${tech.maxLevel}</div>
+                        <div class="tech-description">${tech.description}</div>
+                        ${!isMaxed && tech.requires ?
+                            `<div class="tech-requires">Требуется: ${Object.entries(tech.requires).map(([reqKey, reqLevel]) =>
+                                `${state.tech[reqKey]?.name || reqKey} ${reqLevel}`).join(', ')}</div>` : ''}
+                        ${!isMaxed ?
+                            `<div class="tech-cost">${Math.pow(2, tech.level) * 10} ${t('stat_science_points')}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
 }
 
 function renderEpochsMenu() {
@@ -936,6 +1540,12 @@ function updateUI() {
     } else {
         document.getElementById('prestigeSection').style.display = 'none';
     }
+
+    // Update technology/science display (simple version for now)
+    // We could add a technology tab, but for now let's show science points in stats or somewhere
+    // For now, we'll just rely on the stats tab to show detailed info
+
+    // Update stats tab if it's active (we'll rely on renderStats being called when tab changes)
 }
 
 function showToast(msg) {
@@ -954,6 +1564,7 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
         document.getElementById(btn.dataset.tab).classList.add('active');
         if (btn.dataset.tab === 'tab-quests') renderQuests();
         if (btn.dataset.tab === 'tab-stats') renderStats();
+        if (btn.dataset.tab === 'tab-tech') renderTech();
     });
 });
 
@@ -997,7 +1608,14 @@ function gameLoop() {
         const income = getTotalPassiveIncome();
         state.energy += income * dt;
         state.totalEnergy += income * dt;
+        // Generate science points over time (online research)
+        state.sciencePoints += getResearchPointsPerSecond() * dt;
     }
+    updateExpeditions();
+    updateEvents();
+    updateStats();
+    // Update artifact collection status (in case any changed)
+    updateArtifactCollection();
     updateUI();
     requestAnimationFrame(gameLoop);
 }
@@ -1077,10 +1695,12 @@ function applyUITranslations() {
         el = document.querySelector('.auth-note'); if (el) el.textContent = t('auth_note');
         el = document.querySelector('#tab-quests .section-title'); if (el) el.textContent = t('quests');
         el = document.querySelector('#tab-stats .section-title'); if (el) el.textContent = t('stats');
+        el = document.querySelector('#tab-tech .section-title'); if (el) el.textContent = t('tech_tab');
         var navBtns = document.querySelectorAll('.nav-btn');
         if (navBtns[0]) navBtns[0].childNodes[2].textContent = t('game_tab');
         if (navBtns[1]) navBtns[1].childNodes[2].textContent = t('quests');
         if (navBtns[2]) navBtns[2].childNodes[2].textContent = t('stats');
+        if (navBtns[3]) navBtns[3].childNodes[2].textContent = t('tech_tab');
         document.querySelector('.offline-title').textContent = t('offline_title');
         document.querySelector('.offline-desc').textContent = t('offline_desc');
         document.getElementById('offlineTimeLabel').textContent = t('offline_time');
